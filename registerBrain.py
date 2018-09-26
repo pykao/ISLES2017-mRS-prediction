@@ -34,8 +34,11 @@ def RegisterBrain(adc_path):
     print('Finish this subject: %s'  %adc_path)
 
 def Lesions2MNI152(GTInVol, omat):
-	new_name_append = "_prob_MNI152_T1_1mm.nii.gz"
-	subprocess.call(["flirt", "-in", GTInVol, "-ref", refVol, "-out", GTInVol[:-4] + new_name_append, "-init", omat, "-applyxfm"])
+	new_name_prob = GTInVol[:-4] + "_prob_MNI152_T1_1mm.nii.gz"
+	new_name_bin = GTInVol[:-4] + "_MNI152_T1_1mm.nii.gz"
+	subprocess.call(["flirt", "-in", GTInVol, "-ref", refVol, "-out", new_name_prob, "-init", omat, "-applyxfm"])
+	subprocess.call(["fslmaths", new_name_prob, "-thr", "0", "-bin", new_name_bin])
+
 
 
 
@@ -51,9 +54,6 @@ refVol = paths.mni152_1mm_path
 gt_filepaths = ISLES2017TrainingGTPaths()
 
 omat_filepaths = ISLES2017TrainingInVol2RefVolPaths()
-
-for i in omat_filepaths:
-	print(i)
 
 pool = Pool(6)
 
