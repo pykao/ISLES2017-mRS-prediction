@@ -71,6 +71,16 @@ def get_lesion_weights(whole_tumor_mni_path):
         weights[bp_number] = whole_tumor_in_bp_size/bp_size
     return weights
 
+# setup logs
+log = os.path.join(os.getcwd(), 'log_tractographic.txt')
+fmt = '%(asctime)s %(message)s'
+logging.basicConfig(level=logging.INFO, format=fmt, filename=log)
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+console.setFormatter(logging.Formatter(fmt))
+logging.getLogger('').addHandler(console)
+
+
 train_mRS_file = "ISLES2017_Training.csv"
 
 train_mRS_path = os.path.join(paths.isles2017_dir, train_mRS_file)
@@ -119,7 +129,7 @@ W_dsi_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
 W_nrm_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
 W_bin_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
 
-
+logging.info('Tractographic feature extraction...')
 for idx, subject_name in enumerate(train_dataset.keys()):
     mRS_gt[idx] = train_dataset[subject_name]['mRS']
     subject_id = train_dataset[subject_name]['ID']
@@ -144,7 +154,9 @@ for idx, subject_name in enumerate(train_dataset.keys()):
     W_dsi_end_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_end, axis=0), lesion_weights)
     W_nrm_end_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_end, axis=0), lesion_weights)
     W_bin_end_histogram_features[idx, :] = np.multiply(np.sum(W_bin_end, axis=0), lesion_weights)
+logging.info('Completed tractographic feature extraction...')
 
+logging.info('Features normalization...')
 scaler = StandardScaler()
 # Normalize Training Features
 normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
@@ -153,3 +165,30 @@ normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histo
 normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
 normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
 normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
+logging.info('Completed features normalization...')
+
+# Perforamce Feature Selection
+
+# Remove features with low variance
+logging.info('Remove features with low variance...')
+sel = VarianceThreshold(0)
+sel.fit(normalized_W_dsi_pass_histogram_features)
+selected_normalized_W_dsi_pass_histogram_features = sel.transform(normalized_W_dsi_pass_histogram_features)
+sel.fit(normalized_W_nrm_pass_histogram_features)
+selected_normalized_W_nrm_pass_histogram_features = sel.transform(normalized_W_nrm_pass_histogram_features)
+sel.fit(normalized_W_bin_pass_histogram_features)
+selected_normalized_W_bin_pass_histogram_features = sel.transform(normalized_W_bin_pass_histogram_features)
+sel.fit(normalized_W_dsi_end_histogram_features)
+selected_normalized_W_dsi_end_histogram_features = sel.transform(normalized_W_dsi_end_histogram_features)
+sel.fit(normalized_W_nrm_end_histogram_features)
+selected_normalized_W_nrm_end_histogram_features = sel.transform(normalized_W_nrm_end_histogram_features)
+sel.fit(normalized_W_bin_end_histogram_features)
+selected_normalized_W_bin_end_histogram_features = sel.transform(normalized_W_bin_end_histogram_features)
+
+print(selected_normalized_W_dsi_pass_histogram_features.shape)
+print(selected_normalized_W_nrm_pass_histogram_features.shape)
+print(selected_normalized_W_bin_pass_histogram_features.shape)
+print(selected_normalized_W_dsi_end_histogram_features.shape)
+print(selected_normalized_W_nrm_end_histogram_features.shape)
+print(selected_normalized_W_bin_end_histogram_features.shape)
+
