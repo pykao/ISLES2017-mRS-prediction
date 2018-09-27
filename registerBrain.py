@@ -27,9 +27,12 @@ def RegisterBrain(adc_path):
         os.makedirs(mni_path)
     subject2mni_mat = os.path.join(mni_path, adc_file[:adc_file.index('.nii')]+'_MNI152_1mm_invol2refvol.mat')
     mni2subject_mat = os.path.join(mni_path, adc_file[:adc_file.index('.nii')]+'_MNI152_1mm_refvol2invol.mat')
+    adc_mni = os.path.join(mni_path, adc_file[:adc_file.index('.nii')]+'_MNI152_1mm.nii.gz')
     #print(adc_path, paths.mni152_1mm_path, subject2mni_mat, mni2subject_mat)
     # Create the affine transformation matrix from subject space to MNI152 1mm space
     subprocess.call(["flirt", "-in", adc_path, "-ref", paths.mni152_1mm_path, "-omat", subject2mni_mat])
+    # Output ADC in MNI 152 1mm space
+    #subprocess.call(["flirt", "-in", adc_path, "-ref", paths.mni152_1mm_path, "-out", adc_mni, "-omat", subject2mni_mat])
     subprocess.call(["convert_xfm", "-omat", mni2subject_mat, "-inverse", subject2mni_mat])
     print('Finish this subject: %s'  %adc_path)
 
@@ -49,7 +52,7 @@ global refVol
 
 refVol = paths.mni152_1mm_path
 
-#adc_filepaths = ISLES2017TrainingADCPaths()
+adc_filepaths = ISLES2017TrainingADCPaths()
 
 gt_filepaths = ISLES2017TrainingGTPaths()
 
@@ -57,6 +60,6 @@ omat_filepaths = ISLES2017TrainingInVol2RefVolPaths()
 
 pool = Pool(6)
 
-#pool.map(RegisterBrain, adc_filepaths)
+pool.map(RegisterBrain, adc_filepaths)
 
-pool.map(Lesions2MNI152_star, zip(gt_filepaths, omat_filepaths))
+#pool.map(Lesions2MNI152_star, zip(gt_filepaths, omat_filepaths))
