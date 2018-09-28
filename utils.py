@@ -1,5 +1,6 @@
 import SimpleITK as sitk
 import numpy as np
+import os
 
 def ReadImage(path):
     ''' This code returns the numpy nd array for a MR image at path'''
