@@ -8,71 +8,20 @@ import numpy as np
 
 from scipy.io import loadmat
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.model_selection import RepeatedStratifiedKFold, LeaveOneOut
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import RFECV
 from sklearn import svm
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_absolute_error
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
+from utils import ReadImage, find_list, threshold_connectivity_matrix, weight_conversion, get_lesion_weights
 
-def find_list(subject_id, list):
-    files = [file for file in list if subject_id in file]
-    return files[0]
-
-def ReadImage(path):
-    ''' This code returns the numpy nd array for a MR image at path'''
-    return sitk.GetArrayFromImage(sitk.ReadImage(path)).astype(np.float32)
-
-def reshape_by_padding_upper_coords(image, new_shape, pad_value=None):
-    shape = tuple(list(image.shape))
-    new_shape = tuple(np.max(np.concatenate((shape, new_shape)).reshape((2,len(shape))), axis=0))
-    if pad_value is None:
-        if len(shape)==2:
-            pad_value = image[0,0]
-        elif len(shape)==3:
-            pad_value = image[0, 0, 0]
-        else:
-            raise ValueError("Image must be either 2 or 3 dimensional")
-    res = np.ones(list(new_shape), dtype=image.dtype) * pad_value
-    if len(shape) == 2:
-        res[0:0+int(shape[0]), 0:0+int(shape[1])] = image
-    elif len(shape) == 3:
-        res[0:0+int(shape[0]), 0:0+int(shape[1]), 0:0+int(shape[2])] = image
-    return res
-
-def threshold_connectivity_matrix(connectivity_matrix, threshold=0.01):
-    ''' threshold the connectiivty matrix in order to remove the noise'''
-    thresholded_connectivity_matrix= np.copy(connectivity_matrix)
-    thresholded_connectivity_matrix[connectivity_matrix <= threshold*np.amax(connectivity_matrix)] = 0
-    return thresholded_connectivity_matrix
-
-def weight_conversion(W):
-    ''' convert to the normalized version and binary version'''
-    W_bin = np.copy(W)
-    W_bin[W!=0]=1
-    W_nrm = np.copy(W)
-    W_nrm = W_nrm/np.amax(np.absolute(W))
-    return W_nrm, W_bin
-
-def get_lesion_weights(whole_tumor_mni_path):
-    ''' get the weight vector'''
-    #print(whole_tumor_mni_path)
-    aal_path = os.path.join(paths.dsi_studio_path, 'atlas', 'aal.nii.gz')
-    aal_nda = ReadImage(aal_path)
-    aal_182_218_182 = reshape_by_padding_upper_coords(aal_nda, (182,218,182), 0)
-    whole_tumor_mni_nda = ReadImage(whole_tumor_mni_path)
-    weights = np.zeros(int(np.amax(aal_182_218_182)), dtype=float)
-    for bp_number in range(int(np.amax(aal_182_218_182))):
-        mask = np.zeros(aal_182_218_182.shape, aal_182_218_182.dtype)
-        mask[aal_182_218_182==(bp_number+1)]=1
-        bp_size = float(np.count_nonzero(mask))
-        whole_tumor_in_bp = np.multiply(mask, whole_tumor_mni_nda)
-        whole_tumor_in_bp_size = float(np.count_nonzero(whole_tumor_in_bp))
-        weights[bp_number] = whole_tumor_in_bp_size/bp_size
-    return weights
 
 # setup logs
-log = os.path.join(os.getcwd(), 'log_tractographic.txt')
+log = os.path.join(os.getcwd(), 'log.txt')
 fmt = '%(asctime)s %(message)s'
 logging.basicConfig(level=logging.INFO, format=fmt, filename=log)
 console = logging.StreamHandler()
@@ -81,29 +30,30 @@ console.setFormatter(logging.Formatter(fmt))
 logging.getLogger('').addHandler(console)
 
 
+
+# The CSV file for train dataset
 train_mRS_file = "ISLES2017_Training.csv"
-
 train_mRS_path = os.path.join(paths.isles2017_dir, train_mRS_file)
-
+# The ground truth lesion in subject space
 gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
-
+# The connectivity matrices location 
 connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', 'gt_stroke')
-
+# pass type locations
 connectivity_pass_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'pass' in name and name.endswith('.mat')]
 connectivity_pass_files.sort()
-
+# end type locations
 connectivity_end_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'end' in name and name.endswith('.mat')]
 connectivity_end_files.sort()
-
+# The ground truth lesions in MNI space
 stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
-
 stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
 stroke_mni_paths.sort()
-
 assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
-
 assert(os.path.isfile(train_mRS_path))
 
+
+
+# Read CSV file for Train dataset
 train_dataset = {}
 with open(train_mRS_path, 'rt') as csv_file:
     csv_reader = csv.reader(csv_file)
@@ -119,8 +69,12 @@ with open(train_mRS_path, 'rt') as csv_file:
                 train_dataset[line[0]]['TTT'] = line[5]
                 train_dataset[line[0]]['ID'] = gt_file[0][-10:-4]
 
+
+# Ground truth 
 mRS_gt = np.zeros(37)
 
+# Feature initialization
+# Tractographic Features
 W_dsi_pass_histogram_features = np.zeros((37, 116), dtype=np.float32)
 W_nrm_pass_histogram_features = np.zeros((37, 116), dtype=np.float32)
 W_bin_pass_histogram_features = np.zeros((37, 116), dtype=np.float32)
@@ -128,10 +82,15 @@ W_bin_pass_histogram_features = np.zeros((37, 116), dtype=np.float32)
 W_dsi_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
 W_nrm_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
 W_bin_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
+# Volumetric Features
+volumetric_features = np.zeros((37,1), dtype = int)
 
-logging.info('Tractographic feature extraction...')
+
+# Feature extraction
+logging.info('Feature extraction...')
 for idx, subject_name in enumerate(train_dataset.keys()):
     mRS_gt[idx] = train_dataset[subject_name]['mRS']
+    print(train_dataset[subject_name]['TICI'])
     subject_id = train_dataset[subject_name]['ID']
     connectivity_pass_file = find_list(subject_id, connectivity_pass_files)
     connectivity_pass_obj = loadmat(connectivity_pass_file)
@@ -144,6 +103,12 @@ for idx, subject_name in enumerate(train_dataset.keys()):
     W_nrm_end, W_bin_end = weight_conversion(weighted_connectivity_end)
 
     stroke_mni_path = find_list(subject_id, stroke_mni_paths)
+
+    #volumetric features
+    stroke_mni_nda = ReadImage(stroke_mni_path)
+    volumetric_features[idx] = np.count_nonzero(stroke_mni_nda)
+
+    # Get the lesion weights
     lesion_weights = get_lesion_weights(stroke_mni_path)
 
     # weighted connectivity histogram
@@ -154,36 +119,38 @@ for idx, subject_name in enumerate(train_dataset.keys()):
     W_dsi_end_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_end, axis=0), lesion_weights)
     W_nrm_end_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_end, axis=0), lesion_weights)
     W_bin_end_histogram_features[idx, :] = np.multiply(np.sum(W_bin_end, axis=0), lesion_weights)
-logging.info('Completed tractographic feature extraction...')
+logging.info('Completed feature extraction...')
 
+
+
+# Normalize Training Features
 logging.info('Features normalization...')
 scaler = StandardScaler()
-# Normalize Training Features
 normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
 normalized_W_nrm_pass_histogram_features = scaler.fit_transform(W_nrm_pass_histogram_features)
 normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histogram_features)
 normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
 normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
 normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
+
+normalized_volumetric_features = scaler.fit_transform(volumetric_features)
+
 logging.info('Completed features normalization...')
 
-# Perforamce Feature Selection
 
+
+# Perforamce Feature Selection
 # Remove features with low variance
 logging.info('Remove features with low variance...')
 sel = VarianceThreshold(0)
-sel.fit(normalized_W_dsi_pass_histogram_features)
-selected_normalized_W_dsi_pass_histogram_features = sel.transform(normalized_W_dsi_pass_histogram_features)
-sel.fit(normalized_W_nrm_pass_histogram_features)
-selected_normalized_W_nrm_pass_histogram_features = sel.transform(normalized_W_nrm_pass_histogram_features)
-sel.fit(normalized_W_bin_pass_histogram_features)
-selected_normalized_W_bin_pass_histogram_features = sel.transform(normalized_W_bin_pass_histogram_features)
-sel.fit(normalized_W_dsi_end_histogram_features)
-selected_normalized_W_dsi_end_histogram_features = sel.transform(normalized_W_dsi_end_histogram_features)
-sel.fit(normalized_W_nrm_end_histogram_features)
-selected_normalized_W_nrm_end_histogram_features = sel.transform(normalized_W_nrm_end_histogram_features)
-sel.fit(normalized_W_bin_end_histogram_features)
-selected_normalized_W_bin_end_histogram_features = sel.transform(normalized_W_bin_end_histogram_features)
+selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
+selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
+selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
+selected_normalized_W_dsi_end_histogram_features = sel.fit_transform(normalized_W_dsi_end_histogram_features)
+selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
+selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
+
+selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 
 print(selected_normalized_W_dsi_pass_histogram_features.shape)
 print(selected_normalized_W_nrm_pass_histogram_features.shape)
@@ -192,3 +159,59 @@ print(selected_normalized_W_dsi_end_histogram_features.shape)
 print(selected_normalized_W_nrm_end_histogram_features.shape)
 print(selected_normalized_W_bin_end_histogram_features.shape)
 
+print(selected_normalized_volumetric_features.shape)
+
+
+
+#logging.info('Using volumetric features')
+logging.info('Using Tractographic Features')
+X = selected_normalized_W_dsi_pass_histogram_features
+#X = selected_normalized_W_nrm_pass_histogram_features
+#X = selected_normalized_W_bin_pass_histogram_features
+#X = selected_normalized_W_dsi_end_histogram_features
+#X = selected_normalized_W_nrm_end_histogram_features
+#X = selected_normalized_W_bin_end_histogram_features
+
+#X = selected_normalized_volumetric_features
+
+print(X.shape)
+
+y = mRS_gt
+
+# Cross Validation Model
+loo = LeaveOneOut()
+
+accuracy = np.zeros((37,1), dtype=np.float32)
+y_pred_label = np.zeros((37,1), dtype=int)
+
+
+logging.info('RFECV Feature selection')
+# rfecv 
+#estimator = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
+estimator = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
+rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = -1)
+rfecv.fit(X, y)
+X_rfecv = rfecv.transform(X)
+#logging.info('Logistic Regression, Optimal number of features: %d' % X_rfecv.shape[1])
+logging.info('Random Forest Regressior, Optimal number of features: %d' % X_rfecv.shape[1])
+
+
+logging.info('Prediction')
+idx = 0
+for train_index, test_index in loo.split(X_rfecv):
+
+	X_train, X_test = X_rfecv[train_index], X_rfecv[test_index]
+	y_train, y_test = y[train_index], y[test_index]
+	
+	# Regressior
+	rfr = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
+	rfr.fit(X_train, y_train)
+	y_pred_label[idx] = rfr.predict(X_test)
+	print(rfr.predict(X_test))
+	#lr = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
+	#lr.fit(X_train, y_train)
+	#accuracy[idx] = lr.score(X_test, y_test)
+	#y_pred_label[idx] = lr.predict(X_test)
+	idx += 1
+
+#logging.info("Best Scores of features  - Using LR - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))
