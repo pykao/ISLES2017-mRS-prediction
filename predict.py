@@ -97,7 +97,8 @@ y_pred_label = np.zeros((37,1), dtype=int)
 logging.info('RFECV Feature selection')
 # rfecv 
 #estimator = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
-estimator = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
+#estimator = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
+estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1)
 rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = -1)
 rfecv.fit(X, y)
 X_rfecv = rfecv.transform(X)
@@ -111,18 +112,29 @@ for train_index, test_index in loo.split(X_rfecv):
 
 	X_train, X_test = X_rfecv[train_index], X_rfecv[test_index]
 	y_train, y_test = y[train_index], y[test_index]
+
+	# Random Forest Classifier
+	rfc = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+	rfc.fit(X_train, y_train)
+	accuracy[idx] = rfc.score(X_test, y_test)
+	y_pred_label[idx] = rfc.predict(X_test)
+	print(rfc.predict(X_test))
 	
-	# Regressior
-	rfr = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
-	rfr.fit(X_train, y_train)
-	y_pred_label[idx] = rfr.predict(X_test)
+	# Random Forest Regressior
+	#rfr = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
+	#rfr.fit(X_train, y_train)
+	#accuracy[idx] = rfr.score(X_test, y_test)
+	#y_pred_label[idx] = rfr.predict(X_test)
 	#print(rfr.predict(X_test))
+
+
 	#lr = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
 	#lr.fit(X_train, y_train)
 	#accuracy[idx] = lr.score(X_test, y_test)
 	#y_pred_label[idx] = lr.predict(X_test)
+	
+
 	idx += 1
 
-#logging.info("Best Scores of features  - Using LR - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))
+logging.info("Best Scores of features  - Using RFC - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))
 
-'''

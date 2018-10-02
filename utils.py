@@ -88,7 +88,7 @@ def get_train_dataset():
 
 def extract_gt_mRS():
     # Ground truth 
-    mRS_gt = np.zeros((37, 1))
+    mRS_gt = np.zeros((37, ))
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
         mRS_gt[idx] = train_dataset[subject_name]['mRS']
