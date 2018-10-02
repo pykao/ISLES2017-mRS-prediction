@@ -13,7 +13,7 @@ from sklearn.feature_selection import RFECV
 from sklearn import svm
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, accuracy_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from utils import ReadImage, find_list, threshold_connectivity_matrix, weight_conversion, get_lesion_weights, get_train_dataset, extract_gt_mRS, extract_volumetric_features, extract_tractographic_features
@@ -97,16 +97,17 @@ y_pred_label = np.zeros((37,1), dtype=int)
 logging.info('RFECV Feature selection')
 # rfecv 
 #estimator = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
-#estimator = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
-estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1)
-rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = -1)
+estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=-1)
+#estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+#rfecv = RFECV(estimator, step=1, cv=loo, scoring='accuracy', n_jobs = -1)
+rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_squared_error', n_jobs = -1)
 rfecv.fit(X, y)
 X_rfecv = rfecv.transform(X)
 #logging.info('Logistic Regression, Optimal number of features: %d' % X_rfecv.shape[1])
 logging.info('Random Forest Regressior, Optimal number of features: %d' % X_rfecv.shape[1])
 
 
-logging.info('Prediction')
+logging.info('Predicting...')
 idx = 0
 for train_index, test_index in loo.split(X_rfecv):
 
@@ -114,18 +115,18 @@ for train_index, test_index in loo.split(X_rfecv):
 	y_train, y_test = y[train_index], y[test_index]
 
 	# Random Forest Classifier
-	rfc = RandomForestClassifier(n_estimators=100, n_jobs=-1)
-	rfc.fit(X_train, y_train)
-	accuracy[idx] = rfc.score(X_test, y_test)
-	y_pred_label[idx] = rfc.predict(X_test)
-	print(rfc.predict(X_test))
+	#rfc = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+	#rfc.fit(X_train, y_train)
+	#accuracy[idx] = rfc.score(X_test, y_test)
+	#y_pred_label[idx] = rfc.predict(X_test)
+	#print(rfc.predict(X_test))
 	
 	# Random Forest Regressior
-	#rfr = RandomForestRegressor(n_estimators=100, criterion='mae', random_state=0, n_jobs=-1)
-	#rfr.fit(X_train, y_train)
+	rfr = RandomForestRegressor(n_estimators=300, criterion='mae', random_state=0, n_jobs=-1)
+	rfr.fit(X_train, y_train)
 	#accuracy[idx] = rfr.score(X_test, y_test)
-	#y_pred_label[idx] = rfr.predict(X_test)
-	#print(rfr.predict(X_test))
+	y_pred_label[idx] = np.round(rfr.predict(X_test))
+	accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
 
 
 	#lr = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
