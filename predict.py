@@ -39,12 +39,13 @@ volumetric_features = extract_volumetric_features()
 
 logging.info('Extracting spatial features...')
 spatial_features = extract_spatial_features()
-print(spatial_features.shape)
+
+
 logging.info('Completed feature extraction...')
 
 
 
-'''
+
 # Normalize Training Features
 logging.info('Features normalization...')
 scaler = StandardScaler()
@@ -56,6 +57,8 @@ normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogr
 normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
 
 normalized_volumetric_features = scaler.fit_transform(volumetric_features)
+
+normalized_spatial_features = scaler.fit_transform(spatial_features)
 
 logging.info('Completed features normalization...')
 
@@ -74,11 +77,11 @@ selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_
 
 selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 
+selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 
 
-
-logging.info('Using Tractographic Features')
-X = selected_normalized_W_dsi_pass_histogram_features
+logging.info('Using Spatial Features')
+#X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass_histogram_features
 #X = selected_normalized_W_bin_pass_histogram_features
 #X = selected_normalized_W_dsi_end_histogram_features
@@ -88,6 +91,7 @@ X = selected_normalized_W_dsi_pass_histogram_features
 #logging.info('Using volumetric features')
 #X = selected_normalized_volumetric_features
 
+X = selected_normalized_spatial_features
 
 y = mRS_gt
 
@@ -141,6 +145,4 @@ for train_index, test_index in loo.split(X_rfecv):
 
 	idx += 1
 
-logging.info("Best Scores of features  - Using RFC - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))
-
-'''
+logging.info("Best Scores of features  - Using RFR - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))
