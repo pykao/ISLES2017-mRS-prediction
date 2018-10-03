@@ -5,6 +5,7 @@ import paths
 import csv
 
 from scipy.io import loadmat
+from skimage.measure import regionprops
 
 def ReadImage(path):
     ''' This code returns the numpy nd array for a MR image at path'''
@@ -112,6 +113,24 @@ def extract_volumetric_features():
         volumetric_features[idx] = np.count_nonzero(stroke_mni_nda)
     return volumetric_features
 
+def extract_spatial_features():
+    # The ground truth lesions in MNI space
+    stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
+    stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
+    stroke_mni_paths.sort()
+    assert(len(stroke_mni_paths) == 43)
+    # Volumetric Features
+    spatial_features = np.zeros((37,3))
+    train_dataset = get_train_dataset()
+    for idx, subject_name in enumerate(train_dataset.keys()):
+        subject_id = train_dataset[subject_name]['ID']
+        stroke_mni_path = find_list(subject_id, stroke_mni_paths)
+        stroke_mni_nda = ReadImage(stroke_mni_path)
+        stroke_regions = regionprops(stroke_mni_nda.astype(int))
+        print(subject_id, stroke_regions[0].major_axis_length, stroke_regions[0].minor_axis_length)
+        stroke_centroid = stroke_regions[0].centroid
+        spatial_features[idx, :] = stroke_centroid
+    return spatial_features
 
 def extract_tractographic_features():
     # The ground truth lesion in subject space

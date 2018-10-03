@@ -16,7 +16,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_absolute_error, accuracy_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
-from utils import ReadImage, find_list, threshold_connectivity_matrix, weight_conversion, get_lesion_weights, get_train_dataset, extract_gt_mRS, extract_volumetric_features, extract_tractographic_features
+from utils import ReadImage, find_list, threshold_connectivity_matrix, weight_conversion, get_lesion_weights, get_train_dataset, extract_gt_mRS, extract_volumetric_features, extract_tractographic_features, extract_spatial_features
 
 
 # setup logs
@@ -34,13 +34,17 @@ mRS_gt = extract_gt_mRS()
 logging.info('Extracting volumetric features...')
 volumetric_features = extract_volumetric_features()
 
-logging.info('Extracting tractographic features...')
-W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features()
+#logging.info('Extracting tractographic features...')
+#W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features()
 
-print(W_dsi_pass_histogram_features.shape)
-
+logging.info('Extracting spatial features...')
+spatial_features = extract_spatial_features()
+print(spatial_features.shape)
 logging.info('Completed feature extraction...')
 
+
+
+'''
 # Normalize Training Features
 logging.info('Features normalization...')
 scaler = StandardScaler()
@@ -100,7 +104,7 @@ logging.info('RFECV Feature selection')
 estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=-1)
 #estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1)
 #rfecv = RFECV(estimator, step=1, cv=loo, scoring='accuracy', n_jobs = -1)
-rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_squared_error', n_jobs = -1)
+rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = -1)
 rfecv.fit(X, y)
 X_rfecv = rfecv.transform(X)
 #logging.info('Logistic Regression, Optimal number of features: %d' % X_rfecv.shape[1])
@@ -122,7 +126,7 @@ for train_index, test_index in loo.split(X_rfecv):
 	#print(rfc.predict(X_test))
 	
 	# Random Forest Regressior
-	rfr = RandomForestRegressor(n_estimators=300, criterion='mae', random_state=0, n_jobs=-1)
+	rfr = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=-1)
 	rfr.fit(X_train, y_train)
 	#accuracy[idx] = rfr.score(X_test, y_test)
 	y_pred_label[idx] = np.round(rfr.predict(X_test))
@@ -139,3 +143,4 @@ for train_index, test_index in loo.split(X_rfecv):
 
 logging.info("Best Scores of features  - Using RFC - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))
 
+'''
