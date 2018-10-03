@@ -127,7 +127,7 @@ def extract_spatial_features():
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
         stroke_mni_nda = ReadImage(stroke_mni_path)
         stroke_regions = regionprops(stroke_mni_nda.astype(int))
-        print(subject_id, stroke_regions[0].major_axis_length, stroke_regions[0].minor_axis_length)
+        #print(subject_id, stroke_regions[0].major_axis_length, stroke_regions[0].minor_axis_length)
         stroke_centroid = stroke_regions[0].centroid
         spatial_features[idx, :] = stroke_centroid
     return spatial_features
@@ -184,3 +184,29 @@ def extract_tractographic_features():
         W_nrm_end_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_end, axis=0), lesion_weights)
         W_bin_end_histogram_features[idx, :] = np.multiply(np.sum(W_bin_end, axis=0), lesion_weights)
     return W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features
+
+
+def extract_volumetric_spatial_features(atlas_name):
+    stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
+    stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
+    stroke_mni_paths.sort()
+    train_dataset = get_train_dataset()
+    atlas_path = os.path.join(paths.dsi_studio_path, 'atlas', atlas_name)
+    atlas_nda = ReadImage(atlas_path)
+    if atlas_name == 'aal.nii.gz':
+        atlas_nda = reshape_by_padding_upper_coords(atlas_nda, (182,218,182), 0)
+    volumetric_spatial_features = np.zeros((37, int(np.amax(atlas_nda))+1), dtype=float)
+    for idx, subject_name in enumerate(train_dataset.keys()):
+        subject_id = train_dataset[subject_name]['ID']
+        stroke_mni_path = find_list(subject_id, stroke_mni_paths)
+        stroke_mni_nda = ReadImage(stroke_mni_path)
+        whole_stroke_volume = float(np.count_nonzero(stroke_mni_nda))
+        for bp_number in range(1, int(np.amax(atlas_nda)+1)):
+            mask = np.zeros(atlas_nda.shape, atlas_nda.dtype)
+            mask[atlas_nda==(bp_number)]=1
+            stroke_in_bp = np.multiply(mask, stroke_mni_nda)
+            stroke_in_bp_volume = np.count_nonzero(stroke_in_bp)
+            volumetric_spatial_features[idx, bp_number] = stroke_in_bp_volume
+        total_stroke_volume_bp = np.sum(volumetric_spatial_features[idx, :])
+        volumetric_spatial_features[idx, 0] = whole_stroke_volume - total_stroke_volume_bp
+    return volumetric_spatial_features
