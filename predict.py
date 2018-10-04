@@ -42,8 +42,13 @@ spatial_features = extract_spatial_features()
 
 logging.info('Extracting volumetric and spatial features...')
 HarvardOxfordSub_name = 'HarvardOxfordSub.nii.gz'
+HarvardOxfordCort_name = 'HarvardOxfordCort.nii.gz'
 aal_name = 'aal.nii.gz'
-volumetric_spatial_features = extract_volumetric_spatial_features(HarvardOxfordSub_name)
+JHU_WhiteMatter_labels_1mm_name = 'JHU-WhiteMatter-labels-1mm.nii.gz'
+MNI_name = 'MNI.nii.gz'
+OASIS_TRT_20_name = 'OASIS_TRT_20.nii.gz'
+
+volumetric_spatial_features = extract_volumetric_spatial_features(OASIS_TRT_20_name)
 print(volumetric_spatial_features.shape)
 logging.info('Completed feature extraction...')
 
@@ -113,10 +118,10 @@ y_pred_label = np.zeros((37,1), dtype=int)
 logging.info('RFECV Feature selection...')
 # rfecv 
 #estimator = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
-estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=-1)
+estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
 #estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1)
 #rfecv = RFECV(estimator, step=1, cv=loo, scoring='accuracy', n_jobs = -1)
-rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = -1)
+rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = 2)
 rfecv.fit(X, y)
 X_rfecv = rfecv.transform(X)
 #logging.info('Logistic Regression, Optimal number of features: %d' % X_rfecv.shape[1])
@@ -138,7 +143,7 @@ for train_index, test_index in loo.split(X_rfecv):
 	#print(rfc.predict(X_test))
 	
 	# Random Forest Regressior
-	rfr = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=-1)
+	rfr = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
 	rfr.fit(X_train, y_train)
 	#accuracy[idx] = rfr.score(X_test, y_test)
 	y_pred_label[idx] = np.round(rfr.predict(X_test))
