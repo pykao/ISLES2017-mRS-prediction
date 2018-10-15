@@ -62,4 +62,4 @@ pool = Pool(6)
 
 pool.map(RegisterBrain, adc_filepaths)
 
-#pool.map(Lesions2MNI152_star, zip(gt_filepaths, omat_filepaths))
+pool.map(Lesions2MNI152_star, zip(gt_filepaths, omat_filepaths))
