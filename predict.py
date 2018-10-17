@@ -17,7 +17,8 @@ from sklearn.metrics import mean_absolute_error, accuracy_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from utils import ReadImage, find_list, threshold_connectivity_matrix, weight_conversion, get_lesion_weights, get_train_dataset
-from utils import extract_gt_mRS, extract_volumetric_features, extract_tractographic_features, extract_spatial_features, extract_volumetric_spatial_features
+from utils import extract_gt_mRS, extract_volumetric_features, extract_tractographic_features, extract_spatial_features
+from utils import extract_volumetric_spatial_features, extract_morphological_features
 
 # setup logs
 log = os.path.join(os.getcwd(), 'log.txt')
@@ -40,16 +41,20 @@ volumetric_features = extract_volumetric_features()
 logging.info('Extracting spatial features...')
 spatial_features = extract_spatial_features()
 
-logging.info('Extracting volumetric and spatial features...')
-HarvardOxfordSub_name = 'HarvardOxfordSub.nii.gz'
-HarvardOxfordCort_name = 'HarvardOxfordCort.nii.gz'
-aal_name = 'aal.nii.gz'
-JHU_WhiteMatter_labels_1mm_name = 'JHU-WhiteMatter-labels-1mm.nii.gz'
-MNI_name = 'MNI.nii.gz'
-OASIS_TRT_20_name = 'OASIS_TRT_20.nii.gz'
+logging.info('Extracting morphological features...')
+morphological_features = extract_morphological_features()
 
-volumetric_spatial_features = extract_volumetric_spatial_features(OASIS_TRT_20_name)
-print(volumetric_spatial_features.shape)
+
+#logging.info('Extracting volumetric and spatial features...')
+#HarvardOxfordSub_name = 'HarvardOxfordSub.nii.gz'
+#HarvardOxfordCort_name = 'HarvardOxfordCort.nii.gz'
+#aal_name = 'aal.nii.gz'
+#JHU_WhiteMatter_labels_1mm_name = 'JHU-WhiteMatter-labels-1mm.nii.gz'
+#MNI_name = 'MNI.nii.gz'
+#OASIS_TRT_20_name = 'OASIS_TRT_20.nii.gz'
+
+#volumetric_spatial_features = extract_volumetric_spatial_features(OASIS_TRT_20_name)
+#print(volumetric_spatial_features.shape)
 logging.info('Completed feature extraction...')
 
 
@@ -64,11 +69,13 @@ scaler = StandardScaler()
 #normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
 #normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
 
-normalized_volumetric_features = scaler.fit_transform(volumetric_features)
+#normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
-normalized_spatial_features = scaler.fit_transform(spatial_features)
+#normalized_spatial_features = scaler.fit_transform(spatial_features)
 
-normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
+normalized_morphological_features = scaler.fit_transform(morphological_features)
+
+#normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
 
 logging.info('Completed features normalization...')
 
@@ -85,13 +92,15 @@ sel = VarianceThreshold(0)
 #selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
 #selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
 
-selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
+#selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 
-selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
+#selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 
-selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
+selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
 
-logging.info('Using Volumetric and Spatial Features....')
+#selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
+
+#logging.info('Using Volumetric and Spatial Features....')
 #X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass_histogram_features
 #X = selected_normalized_W_bin_pass_histogram_features
@@ -103,8 +112,10 @@ logging.info('Using Volumetric and Spatial Features....')
 #X = selected_normalized_volumetric_features
 
 #X = selected_normalized_spatial_features
+logging.info("Using morphological features...")
+X = selected_normalized_morphological_features
 
-X = selected_normalized_volumetric_spatial_features
+#X = selected_normalized_volumetric_spatial_features
 
 y = mRS_gt
 
