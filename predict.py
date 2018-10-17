@@ -32,17 +32,18 @@ logging.getLogger('').addHandler(console)
 logging.info('Extracting mRS scores...')
 mRS_gt = extract_gt_mRS()
 
-logging.info('Extracting volumetric features...')
-volumetric_features = extract_volumetric_features()
+#logging.info('Extracting volumetric features...')
+#volumetric_features = extract_volumetric_features()
 
-#logging.info('Extracting tractographic features...')
-#W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features()
+logging.info('Extracting tractographic features...')
+region_type='roi'
+W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features(region_type)
 
-logging.info('Extracting spatial features...')
-spatial_features = extract_spatial_features()
+#logging.info('Extracting spatial features...')
+#spatial_features = extract_spatial_features()
 
-logging.info('Extracting morphological features...')
-morphological_features = extract_morphological_features()
+#logging.info('Extracting morphological features...')
+#morphological_features = extract_morphological_features()
 
 
 #logging.info('Extracting volumetric and spatial features...')
@@ -62,18 +63,18 @@ logging.info('Completed feature extraction...')
 # Normalize Training Features
 logging.info('Features normalization...')
 scaler = StandardScaler()
-#normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
-#normalized_W_nrm_pass_histogram_features = scaler.fit_transform(W_nrm_pass_histogram_features)
-#normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histogram_features)
-#normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
-#normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
-#normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
+normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
+normalized_W_nrm_pass_histogram_features = scaler.fit_transform(W_nrm_pass_histogram_features)
+normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histogram_features)
+normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
+normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
+normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
 
 #normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
 #normalized_spatial_features = scaler.fit_transform(spatial_features)
 
-normalized_morphological_features = scaler.fit_transform(morphological_features)
+#normalized_morphological_features = scaler.fit_transform(morphological_features)
 
 #normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
 
@@ -85,23 +86,24 @@ logging.info('Completed features normalization...')
 # Remove features with low variance
 logging.info('Remove features with low variance...')
 sel = VarianceThreshold(0)
-#selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
-#selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
-#selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
-#selected_normalized_W_dsi_end_histogram_features = sel.fit_transform(normalized_W_dsi_end_histogram_features)
-#selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
-#selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
+selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
+selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
+selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
+selected_normalized_W_dsi_end_histogram_features = sel.fit_transform(normalized_W_dsi_end_histogram_features)
+selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
+selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
 
 #selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 
 #selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 
-selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
+#selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
 
 #selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
 
 #logging.info('Using Volumetric and Spatial Features....')
-#X = selected_normalized_W_dsi_pass_histogram_features
+logging.info('Using Tractographic Features')
+X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass_histogram_features
 #X = selected_normalized_W_bin_pass_histogram_features
 #X = selected_normalized_W_dsi_end_histogram_features
@@ -112,8 +114,8 @@ selected_normalized_morphological_features = sel.fit_transform(normalized_morpho
 #X = selected_normalized_volumetric_features
 
 #X = selected_normalized_spatial_features
-logging.info("Using morphological features...")
-X = selected_normalized_morphological_features
+#logging.info("Using morphological features...")
+#X = selected_normalized_morphological_features
 
 #X = selected_normalized_volumetric_spatial_features
 
