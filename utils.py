@@ -152,11 +152,11 @@ def extract_morphological_features():
         print(subject_id, morphological_features[idx, :])
     return morphological_features
 
-def extract_tractographic_features():
+def extract_tractographic_features(region_type='roi'):
     # The ground truth lesion in subject space
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     # The connectivity matrices location 
-    connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', 'gt_stroke')
+    connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', region_type, 'gt_stroke')
     # pass type locations
     connectivity_pass_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'pass' in name and name.endswith('.mat')]
     connectivity_pass_files.sort()
@@ -164,7 +164,7 @@ def extract_tractographic_features():
     connectivity_end_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'end' in name and name.endswith('.mat')]
     connectivity_end_files.sort()
     # The ground truth lesions in MNI space
-    stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
+    stroke_mni_dir = os.path.join(paths.dsi_studio_path, region_type, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
