@@ -20,6 +20,8 @@ from utils import ReadImage, find_list, threshold_connectivity_matrix, weight_co
 from utils import extract_gt_mRS, extract_volumetric_features, extract_tractographic_features, extract_spatial_features
 from utils import extract_volumetric_spatial_features, extract_morphological_features
 
+from xgboost import XGBRegressor
+
 # setup logs
 log = os.path.join(os.getcwd(), 'log.txt')
 fmt = '%(asctime)s %(message)s'
@@ -35,15 +37,15 @@ mRS_gt = extract_gt_mRS()
 #logging.info('Extracting volumetric features...')
 #volumetric_features = extract_volumetric_features()
 
-#logging.info('Extracting tractographic features...')
-#region_type='roi'
-#W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features(region_type)
+logging.info('Extracting tractographic features...')
+region_type='seed'
+W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features(region_type)
 
 #logging.info('Extracting spatial features...')
 #spatial_features = extract_spatial_features()
 
-logging.info('Extracting morphological features...')
-morphological_features = extract_morphological_features()
+#logging.info('Extracting morphological features...')
+#morphological_features = extract_morphological_features()
 
 
 #logging.info('Extracting volumetric and spatial features...')
@@ -63,18 +65,18 @@ logging.info('Completed feature extraction...')
 # Normalize Training Features
 logging.info('Features normalization...')
 scaler = StandardScaler()
-#normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
-#normalized_W_nrm_pass_histogram_features = scaler.fit_transform(W_nrm_pass_histogram_features)
-#normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histogram_features)
-#normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
-#normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
-#normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
+normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
+normalized_W_nrm_pass_histogram_features = scaler.fit_transform(W_nrm_pass_histogram_features)
+normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histogram_features)
+normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
+normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
+normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
 
 #normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
 #normalized_spatial_features = scaler.fit_transform(spatial_features)
 
-normalized_morphological_features = scaler.fit_transform(morphological_features)
+#normalized_morphological_features = scaler.fit_transform(morphological_features)
 
 #normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
 
@@ -86,24 +88,25 @@ logging.info('Completed features normalization...')
 # Remove features with low variance
 logging.info('Remove features with low variance...')
 sel = VarianceThreshold(0)
-#selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
-#selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
-#selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
-#selected_normalized_W_dsi_end_histogram_features = sel.fit_transform(normalized_W_dsi_end_histogram_features)
-#selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
-#selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
+selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
+selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
+selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
+selected_normalized_W_dsi_end_histogram_features = sel.fit_transform(normalized_W_dsi_end_histogram_features)
+selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
+selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
 
 #selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 
 #selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 
-selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
+#selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
 
 #selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
 
 #logging.info('Using Volumetric and Spatial Features....')
-#logging.info('Using Tractographic Features')
-#X = selected_normalized_W_dsi_pass_histogram_features
+
+logging.info('Using Tractographic Features')
+X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass_histogram_features
 #X = selected_normalized_W_bin_pass_histogram_features
 #X = selected_normalized_W_dsi_end_histogram_features
@@ -115,8 +118,8 @@ selected_normalized_morphological_features = sel.fit_transform(normalized_morpho
 
 #X = selected_normalized_spatial_features
 
-logging.info("Using morphological features...")
-X = selected_normalized_morphological_features
+#logging.info("Using morphological features...")
+#X = selected_normalized_morphological_features
 
 #X = selected_normalized_volumetric_spatial_features
 
@@ -132,15 +135,17 @@ y_pred_label = np.zeros((37,1), dtype=int)
 logging.info('RFECV Feature selection...')
 # rfecv 
 #estimator = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
-estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
+#estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
 #estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+estimator = XGBRegressor(n_estimators=300, n_jobs=2)
+
 #rfecv = RFECV(estimator, step=1, cv=loo, scoring='accuracy', n_jobs = -1)
-rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = 2)
+rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=2)
 rfecv.fit(X, y)
 X_rfecv = rfecv.transform(X)
 #logging.info('Logistic Regression, Optimal number of features: %d' % X_rfecv.shape[1])
-logging.info('Random Forest Regressior, Optimal number of features: %d' % X_rfecv.shape[1])
-
+#logging.info('Random Forest Regressior, Optimal number of features: %d' % X_rfecv.shape[1])
+logging.info('XGBoost Regressior, Optimal number of features: %d' % X_rfecv.shape[1])
 
 logging.info('Predicting...')
 idx = 0
@@ -149,6 +154,13 @@ for train_index, test_index in loo.split(X_rfecv):
 	X_train, X_test = X_rfecv[train_index], X_rfecv[test_index]
 	y_train, y_test = y[train_index], y[test_index]
 
+	# XGBoost Regressor
+	xgbr = XGBRegressor(n_estimators=300, n_jobs=-1)
+	xgbr.fit(X_train, y_train)
+	y_pred_label[idx] = np.round(xgbr.predict(X_test))
+	accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
+
+
 	# Random Forest Classifier
 	#rfc = RandomForestClassifier(n_estimators=100, n_jobs=-1)
 	#rfc.fit(X_train, y_train)
@@ -156,11 +168,11 @@ for train_index, test_index in loo.split(X_rfecv):
 	#y_pred_label[idx] = rfc.predict(X_test)
 	#print(rfc.predict(X_test))
 	
-	# Random Forest Regressior
-	rfr = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
-	rfr.fit(X_train, y_train)
-	y_pred_label[idx] = np.round(rfr.predict(X_test))
-	accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
+	# Random Forest Regressor
+	#rfr = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
+	#rfr.fit(X_train, y_train)
+	#y_pred_label[idx] = np.round(rfr.predict(X_test))
+	#accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
 
 	# Logistic Regression
 	#lr = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
@@ -171,4 +183,4 @@ for train_index, test_index in loo.split(X_rfecv):
 
 	idx += 1
 
-logging.info("Best Scores of features  - Using LR - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))
+logging.info("Best Scores of features  - Using XGBoost Regressor - Accuracy: %0.4f (+/- %0.4f), MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.std(accuracy), np.mean(np.absolute(y-y_pred_label)), np.std(np.absolute(y-y_pred_label))))

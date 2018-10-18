@@ -58,7 +58,7 @@ stroke_files_dir = os.listdir(dst_dir)
 stroke_files_dir.sort()
 assert(len(stroke_files_dir)==43)
 
-region_prop ='--roa='
+region_prop ='--seed='
 
 # pass type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
