@@ -139,7 +139,7 @@ def extract_morphological_features():
     stroke_mni_paths.sort()
     assert(len(stroke_mni_paths) == 43)
     # Volumetric Features
-    morphological_features = np.zeros((37,3), dtype=np.float32)
+    morphological_features = np.zeros((37,4), dtype=np.float32)
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
@@ -148,7 +148,7 @@ def extract_morphological_features():
         stroke_regions = regionprops(stroke_mni_nda.astype(int))
         stroke_major_axis_length = stroke_regions[0].major_axis_length
         stroke_minor_axis_length = stroke_regions[0].minor_axis_length
-        morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length
+        morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_regions[0].solidity
         print(subject_id, morphological_features[idx, :])
     return morphological_features
 
