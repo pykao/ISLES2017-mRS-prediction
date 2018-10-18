@@ -35,15 +35,15 @@ mRS_gt = extract_gt_mRS()
 #logging.info('Extracting volumetric features...')
 #volumetric_features = extract_volumetric_features()
 
-logging.info('Extracting tractographic features...')
-region_type='roi'
-W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features(region_type)
+#logging.info('Extracting tractographic features...')
+#region_type='roi'
+#W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features = extract_tractographic_features(region_type)
 
 #logging.info('Extracting spatial features...')
 #spatial_features = extract_spatial_features()
 
-#logging.info('Extracting morphological features...')
-#morphological_features = extract_morphological_features()
+logging.info('Extracting morphological features...')
+morphological_features = extract_morphological_features()
 
 
 #logging.info('Extracting volumetric and spatial features...')
@@ -63,18 +63,18 @@ logging.info('Completed feature extraction...')
 # Normalize Training Features
 logging.info('Features normalization...')
 scaler = StandardScaler()
-normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
-normalized_W_nrm_pass_histogram_features = scaler.fit_transform(W_nrm_pass_histogram_features)
-normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histogram_features)
-normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
-normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
-normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
+#normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass_histogram_features)
+#normalized_W_nrm_pass_histogram_features = scaler.fit_transform(W_nrm_pass_histogram_features)
+#normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass_histogram_features)
+#normalized_W_dsi_end_histogram_features = scaler.fit_transform(W_dsi_end_histogram_features)
+#normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end_histogram_features)
+#normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end_histogram_features)
 
 #normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
 #normalized_spatial_features = scaler.fit_transform(spatial_features)
 
-#normalized_morphological_features = scaler.fit_transform(morphological_features)
+normalized_morphological_features = scaler.fit_transform(morphological_features)
 
 #normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
 
@@ -86,24 +86,24 @@ logging.info('Completed features normalization...')
 # Remove features with low variance
 logging.info('Remove features with low variance...')
 sel = VarianceThreshold(0)
-selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
-selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
-selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
-selected_normalized_W_dsi_end_histogram_features = sel.fit_transform(normalized_W_dsi_end_histogram_features)
-selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
-selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
+#selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
+#selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
+#selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
+#selected_normalized_W_dsi_end_histogram_features = sel.fit_transform(normalized_W_dsi_end_histogram_features)
+#selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
+#selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
 
 #selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 
 #selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 
-#selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
+selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
 
 #selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
 
 #logging.info('Using Volumetric and Spatial Features....')
-logging.info('Using Tractographic Features')
-X = selected_normalized_W_dsi_pass_histogram_features
+#logging.info('Using Tractographic Features')
+#X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass_histogram_features
 #X = selected_normalized_W_bin_pass_histogram_features
 #X = selected_normalized_W_dsi_end_histogram_features
@@ -114,8 +114,9 @@ X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_volumetric_features
 
 #X = selected_normalized_spatial_features
-#logging.info("Using morphological features...")
-#X = selected_normalized_morphological_features
+
+logging.info("Using morphological features...")
+X = selected_normalized_morphological_features
 
 #X = selected_normalized_volumetric_spatial_features
 
@@ -130,15 +131,15 @@ y_pred_label = np.zeros((37,1), dtype=int)
 
 logging.info('RFECV Feature selection...')
 # rfecv 
-estimator = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
-#estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
+#estimator = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
+estimator = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
 #estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1)
 #rfecv = RFECV(estimator, step=1, cv=loo, scoring='accuracy', n_jobs = -1)
 rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs = 2)
 rfecv.fit(X, y)
 X_rfecv = rfecv.transform(X)
-logging.info('Logistic Regression, Optimal number of features: %d' % X_rfecv.shape[1])
-#logging.info('Random Forest Regressior, Optimal number of features: %d' % X_rfecv.shape[1])
+#logging.info('Logistic Regression, Optimal number of features: %d' % X_rfecv.shape[1])
+logging.info('Random Forest Regressior, Optimal number of features: %d' % X_rfecv.shape[1])
 
 
 logging.info('Predicting...')
@@ -156,17 +157,16 @@ for train_index, test_index in loo.split(X_rfecv):
 	#print(rfc.predict(X_test))
 	
 	# Random Forest Regressior
-	#rfr = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
-	#rfr.fit(X_train, y_train)
-	#accuracy[idx] = rfr.score(X_test, y_test)
-	#y_pred_label[idx] = np.round(rfr.predict(X_test))
-	#accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
+	rfr = RandomForestRegressor(n_estimators=300, criterion='mse', random_state=0, n_jobs=2)
+	rfr.fit(X_train, y_train)
+	y_pred_label[idx] = np.round(rfr.predict(X_test))
+	accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
 
 	# Logistic Regression
-	lr = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
-	lr.fit(X_train, y_train)
-	accuracy[idx] = lr.score(X_test, y_test)
-	y_pred_label[idx] = lr.predict(X_test)
+	#lr = LogisticRegression(penalty='l2', class_weight='balanced', random_state=0, multi_class='multinomial', solver='lbfgs', n_jobs=-1)
+	#lr.fit(X_train, y_train)
+	#accuracy[idx] = lr.score(X_test, y_test)
+	#y_pred_label[idx] = lr.predict(X_test)
 	
 
 	idx += 1

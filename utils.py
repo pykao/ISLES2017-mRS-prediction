@@ -149,7 +149,6 @@ def extract_morphological_features():
         stroke_major_axis_length = stroke_regions[0].major_axis_length
         stroke_minor_axis_length = stroke_regions[0].minor_axis_length
         morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_regions[0].solidity
-        print(subject_id, morphological_features[idx, :])
     return morphological_features
 
 def extract_tractographic_features(region_type='roi'):
