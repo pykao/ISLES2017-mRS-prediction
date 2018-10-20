@@ -105,6 +105,7 @@ selected_morphological_list = [name for idx, name in enumerate(morphological_lis
 selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
 selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
 
+print(selected_volumetric_spatial_list)
 '''
 #logging.info('Using volumetric features')
 #X = selected_normalized_volumetric_features

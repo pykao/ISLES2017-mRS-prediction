@@ -156,7 +156,7 @@ def extract_morphological_features():
         stroke_major_axis_length = stroke_regions[0].major_axis_length
         stroke_minor_axis_length = stroke_regions[0].minor_axis_length
         morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_regions[0].solidity
-    return morphological_features, extract_morphological_features
+    return morphological_features, morphological_list
 
 def extract_tractographic_features(region_type='roi'):
     # The ground truth lesion in subject space
