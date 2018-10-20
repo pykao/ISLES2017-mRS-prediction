@@ -32,6 +32,8 @@ def reshape_by_padding_upper_coords(image, new_shape, pad_value=None):
         res[0:0+int(shape[0]), 0:0+int(shape[1]), 0:0+int(shape[2])] = image
     return res
 
+# ======================= Tools for connectivity matrix ============================================= #
+
 def threshold_connectivity_matrix(connectivity_matrix, threshold=0.01):
     ''' threshold the connectiivty matrix in order to remove the noise'''
     thresholded_connectivity_matrix= np.copy(connectivity_matrix)
@@ -66,6 +68,7 @@ def get_lesion_weights(whole_tumor_mni_path):
 
 def get_train_dataset():    
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
+    gt_subject_paths.sort()
     # The CSV file for train dataset
     train_mRS_file = "ISLES2017_Training.csv"
     train_mRS_path = os.path.join(paths.isles2017_dir, train_mRS_file)
@@ -87,6 +90,7 @@ def get_train_dataset():
                     train_dataset[line[0]]['ID'] = gt_file[0][-10:-4]
     return train_dataset   
 
+# Get the mRS for training subject from training_1 to training_48
 def extract_gt_mRS():
     # Ground truth 
     mRS_gt = np.zeros((37, ))
@@ -95,8 +99,10 @@ def extract_gt_mRS():
         mRS_gt[idx] = train_dataset[subject_name]['mRS']
     return mRS_gt
 
+# Extract the volume of stroke in MNI152 space
 def extract_volumetric_features():
     # The ground truth lesions in MNI space
+    volumetric_list = ["volume"]
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
@@ -111,7 +117,7 @@ def extract_volumetric_features():
         #volumetric features
         stroke_mni_nda = ReadImage(stroke_mni_path)
         volumetric_features[idx] = np.count_nonzero(stroke_mni_nda)
-    return volumetric_features
+    return volumetric_features, volumetric_list
 
 def extract_spatial_features():
     # The ground truth lesions in MNI space
@@ -119,6 +125,7 @@ def extract_spatial_features():
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     assert(len(stroke_mni_paths) == 43)
+    spatial_list = ["centroid_z", "centroid_y", "centroid_x"]
     # Volumetric Features
     spatial_features = np.zeros((37,3))
     train_dataset = get_train_dataset()
@@ -127,10 +134,9 @@ def extract_spatial_features():
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
         stroke_mni_nda = ReadImage(stroke_mni_path)
         stroke_regions = regionprops(stroke_mni_nda.astype(int))
-        #print(subject_id, stroke_regions[0].major_axis_length, stroke_regions[0].minor_axis_length)
         stroke_centroid = stroke_regions[0].centroid
         spatial_features[idx, :] = stroke_centroid
-    return spatial_features
+    return spatial_features, spatial_list
 
 def extract_morphological_features():
     # The ground truth lesions in MNI space
@@ -138,6 +144,7 @@ def extract_morphological_features():
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     assert(len(stroke_mni_paths) == 43)
+    morphological_list = ["major", "minor", "major/minor", "solidity"]
     # Volumetric Features
     morphological_features = np.zeros((37,4), dtype=np.float32)
     train_dataset = get_train_dataset()
@@ -149,7 +156,7 @@ def extract_morphological_features():
         stroke_major_axis_length = stroke_regions[0].major_axis_length
         stroke_minor_axis_length = stroke_regions[0].minor_axis_length
         morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_regions[0].solidity
-    return morphological_features
+    return morphological_features, extract_morphological_features
 
 def extract_tractographic_features(region_type='roi'):
     # The ground truth lesion in subject space
@@ -166,6 +173,7 @@ def extract_tractographic_features(region_type='roi'):
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
+    tractographic_list = ["tract_aal_"+str(i) for i in range(1, 117)]
     assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
     train_dataset = get_train_dataset()
     # Tractographic Features
@@ -202,17 +210,18 @@ def extract_tractographic_features(region_type='roi'):
         W_dsi_end_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_end, axis=0), lesion_weights)
         W_nrm_end_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_end, axis=0), lesion_weights)
         W_bin_end_histogram_features[idx, :] = np.multiply(np.sum(W_bin_end, axis=0), lesion_weights)
-    return W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features
+    return W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features, tractographic_list
 
 
 def extract_volumetric_spatial_features(atlas_name):
+    '''extract volumetric spatial features'''
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     train_dataset = get_train_dataset()
-    atlas_path = os.path.join(paths.dsi_studio_path, 'atlas', atlas_name)
+    atlas_path = os.path.join(paths.dsi_studio_path, 'atlas', atlas_name+'.nii.gz')
     atlas_nda = ReadImage(atlas_path)
-    if atlas_name == 'aal.nii.gz':
+    if atlas_name == 'aal':
         atlas_nda = reshape_by_padding_upper_coords(atlas_nda, (182,218,182), 0)
     volumetric_spatial_features = np.zeros((37, int(np.amax(atlas_nda))+1), dtype=float)
     for idx, subject_name in enumerate(train_dataset.keys()):
@@ -228,4 +237,5 @@ def extract_volumetric_spatial_features(atlas_name):
             volumetric_spatial_features[idx, bp_number] = stroke_in_bp_volume
         total_stroke_volume_bp = np.sum(volumetric_spatial_features[idx, :])
         volumetric_spatial_features[idx, 0] = whole_stroke_volume - total_stroke_volume_bp
-    return volumetric_spatial_features
+    volumetric_spatial_list =['volume_'+atlas_name+'_'+str(i) for i in range(0, int(np.amax(atlas_nda)+1))]
+    return volumetric_spatial_features, volumetric_spatial_list
