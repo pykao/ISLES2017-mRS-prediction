@@ -35,33 +35,30 @@ logging.info('Extracting mRS scores...')
 mRS_gt = extract_gt_mRS()
 
 logging.info('Extracting volumetric features...')
-volumetric_features = extract_volumetric_features()
+volumetric_features, volumetric_list = extract_volumetric_features()
 
 #logging.info('Extracting tractographic features...')
 #region_type='roi'
 #logging.info(region_type)
-#W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end = extract_tractographic_features(region_type)
+#W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type)
 
 logging.info('Extracting spatial features...')
-spatial_features = extract_spatial_features()
+spatial_features, spatial_list = extract_spatial_features()
 
 logging.info('Extracting morphological features...')
-morphological_features = extract_morphological_features()
+morphological_features, morphological_list = extract_morphological_features()
 
 
 logging.info('Extracting volumetric and spatial features...')
-HarvardOxfordSub_name = 'HarvardOxfordSub.nii.gz'
-HarvardOxfordCort_name = 'HarvardOxfordCort.nii.gz'
-aal_name = 'aal.nii.gz'
-JHU_WhiteMatter_labels_1mm_name = 'JHU-WhiteMatter-labels-1mm.nii.gz'
-MNI_name = 'MNI.nii.gz'
-OASIS_TRT_20_name = 'OASIS_TRT_20.nii.gz'
+atlas_name = 'HarvardOxfordSub'
+#atlas_name = 'HarvardOxfordCort'
+#atlas_name = 'aal'
+#atlas_name = 'JHU-WhiteMatter-labels-1mm'
+#atlas_name = 'MNI'
+#atlas_name = 'OASIS_TRT_20'
 
-volumetric_spatial_features = extract_volumetric_spatial_features(aal_name)
-#print(volumetric_spatial_features.shape)
+volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 logging.info('Completed feature extraction...')
-
-
 
 # Normalize Training Features
 logging.info('Features normalization...')
@@ -86,8 +83,8 @@ logging.info('Completed features normalization...')
 
 
 # Perforamce Feature Selection
-# Remove features with low variance
-logging.info('Remove features with low variance...')
+# Remove features with all zeros
+logging.info('Remove features with all zeros...')
 sel = VarianceThreshold(0)
 #selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
 #selected_normalized_W_nrm_pass_histogram_features = sel.fit_transform(normalized_W_nrm_pass_histogram_features)
@@ -97,13 +94,18 @@ sel = VarianceThreshold(0)
 #selected_normalized_W_bin_end_histogram_features = sel.fit_transform(normalized_W_bin_end_histogram_features)
 
 selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
+selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
 
 selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
+selected_spatial_list = [name for idx, name in enumerate(spatial_list) if sel.get_support()[idx]]
 
 selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
+selected_morphological_list = [name for idx, name in enumerate(morphological_list) if sel.get_support()[idx]]
 
 selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
+selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
 
+'''
 #logging.info('Using volumetric features')
 #X = selected_normalized_volumetric_features
 #logging.info('Using spatial features')
@@ -157,7 +159,6 @@ logging.info("Best Scores of features  - Using XGBoost Regressor - Accuracy: %0.
 #all_tractographic_features = np.stack((W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end), axis=-1)
 
 
-'''
 for i in np.arange(6):
 	tractographic_feature = all_tractographic_features[:, :, i]
 	logging.info('Using Tractographic Features')
