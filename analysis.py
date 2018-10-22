@@ -51,17 +51,27 @@ Wdsi_end_roi_pred = np.load('./Wdsi_end_roi_absolute.npy')
 
 
 y = mRS.reshape((37,1))
-volumetric_ae = np.absolute(y-volumetric_pred)
-tractographic_ae = np.absolute(y-Wdsi_end_roi_pred)
-spatial_ae = np.absolute(y-spatial_pred)
-morphological_ae = np.absolute(y-morphological_pred)
-HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
-aal_ae = np.absolute(y-aal_pred)
-#print(stats.ttest_rel(aal_ae, tractographic_ae))
+all_decision = np.concatenate((volumetric_pred, spatial_pred, morphological_pred, HarvardOxfordCort_pred, Wdsi_end_roi_pred), axis=1)
 
-print(np.median(HarvardOxfordCort_ae))
-#cnf_matrix_volume = confusion_matrix(mRS, Wdsi_end_roi_pred)
-#np.set_printoptions(precision=2)
-#plt.figure()
-#plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
-#                      title='Confusion matrix(Tractographic Features)')
+majority_vote = Wdsi_end_roi_pred
+majority_vote[12] = 2
+majority_vote[19] = 2
+majority_vote[20] = 2
+majority_vote[26] = 2
+majority_vote[28] = 1
+majority_ae = np.absolute(y-majority_vote)
+print(y)
+#volumetric_ae = np.absolute(y-volumetric_pred)
+#tractographic_ae = np.absolute(y-Wdsi_end_roi_pred)
+#spatial_ae = np.absolute(y-spatial_pred)
+#morphological_ae = np.absolute(y-morphological_pred)
+#HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
+#aal_ae = np.absolute(y-aal_pred)
+#print(stats.ttest_rel(aal_ae, spatial_ae))
+
+#print(np.median(HarvardOxfordCort_ae))
+cnf_matrix_volume = confusion_matrix(mRS, majority_vote)
+np.set_printoptions(precision=2)
+plt.figure()
+plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
+                      title='Confusion matrix(Tractographic Features)')

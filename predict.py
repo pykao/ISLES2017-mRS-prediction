@@ -37,8 +37,8 @@ mRS_gt = extract_gt_mRS()
 
 # ======================================== Feature Extraction ================================= #
 
-#logging.info('Extracting volumetric features...')
-#volumetric_features, volumetric_list = extract_volumetric_features()
+logging.info('Extracting volumetric features...')
+volumetric_features, volumetric_list = extract_volumetric_features()
 
 #logging.info('Extracting spatial features...')
 #spatial_features, spatial_list = extract_spatial_features()
@@ -57,12 +57,12 @@ mRS_gt = extract_gt_mRS()
 
 #volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
-logging.info('Extracting tractographic features...')
-region_type='seed'
-logging.info(region_type)
-W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type)
+#logging.info('Extracting tractographic features...')
+#region_type='seed'
+#logging.info(region_type)
+#W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type)
 
-logging.info('Completed feature extraction...')
+#logging.info('Completed feature extraction...')
 
 
 
@@ -70,7 +70,7 @@ logging.info('Completed feature extraction...')
 logging.info('Features normalization...')
 scaler = StandardScaler()
 
-#normalized_volumetric_features = scaler.fit_transform(volumetric_features)
+normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
 #normalized_spatial_features = scaler.fit_transform(spatial_features)
 
@@ -81,7 +81,7 @@ scaler = StandardScaler()
 ##normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass)
 ##normalized_W_nrm_pass = scaler.fit_transform(W_nrm_pass)
 ##normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass)
-normalized_W_dsi_end = scaler.fit_transform(W_dsi_end)
+#normalized_W_dsi_end = scaler.fit_transform(W_dsi_end)
 ##normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end)
 ##normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end)
 
@@ -94,8 +94,8 @@ logging.info('Completed features normalization...')
 logging.info('Remove features with all zeros...')
 sel = VarianceThreshold(0)
 
-#selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
-#selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
+selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
+selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
 
 #selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 #selected_spatial_list = [name for idx, name in enumerate(spatial_list) if sel.get_support()[idx]]
@@ -111,8 +111,8 @@ sel = VarianceThreshold(0)
 ##selected_W_nrm_pass_list = [name for idx, name in enumerate(tract_list) if sel.get_support()[idx]]
 ##selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
 
-selected_normalized_W_dsi_end = sel.fit_transform(normalized_W_dsi_end)
-selected_W_dsi_end_list = [name for idx, name in enumerate(tract_list) if sel.get_support()[idx]]
+#selected_normalized_W_dsi_end = sel.fit_transform(normalized_W_dsi_end)
+#selected_W_dsi_end_list = [name for idx, name in enumerate(tract_list) if sel.get_support()[idx]]
 
 ##selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
 ##selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
@@ -121,9 +121,9 @@ selected_W_dsi_end_list = [name for idx, name in enumerate(tract_list) if sel.ge
 
 # ======================================= Select which feature to use ===================================== #
 
-#logging.info('Using volumetric features')
-#X = selected_normalized_volumetric_features
-#feature_list = selected_volumetric_list
+logging.info('Using volumetric features')
+X = selected_normalized_volumetric_features
+feature_list = selected_volumetric_list
 
 #logging.info('Using spatial features')
 #X = selected_normalized_spatial_features
@@ -137,13 +137,13 @@ selected_W_dsi_end_list = [name for idx, name in enumerate(tract_list) if sel.ge
 #X = selected_normalized_volumetric_spatial_features
 #feature_list = selected_volumetric_spatial_list
 
-logging.info('Using Tractographic Features')
+#logging.info('Using Tractographic Features')
 ##X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass
 ##feature_list = selected_W_nrm_pass_list
 ##X = selected_normalized_W_bin_pass_histogram_features
-X = selected_normalized_W_dsi_end
-feature_list = selected_W_dsi_end_list
+#X = selected_normalized_W_dsi_end
+#feature_list = selected_W_dsi_end_list
 ##X = selected_normalized_W_nrm_end_histogram_features
 ##X = selected_normalized_W_bin_end_histogram_features
 
@@ -194,6 +194,7 @@ loo = LeaveOneOut()
 accuracy = np.zeros((37,1), dtype=np.float32)
 y_pred_label = np.zeros((37,1), dtype=np.float32)
 y_abs_error = np.zeros((37,1), dtype=np.float32)
+#y_pred_proba = np.zeros((37,5), dtype=np.float32)
 
 # ======================== Volumetric, Spatial, Morphological, Volumetric Spatial Features ================= #
 estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
@@ -221,12 +222,15 @@ for train_index, test_index in loo.split(X_rfecv):
     subject_importance = estimator.feature_importances_
     subject_feature_importances[idx,:] = subject_importance
     y_pred_label[idx] = np.round(estimator.predict(X_test))
+    #y_pred_proba[idx, :] = estimator.predict_proba(X_test)
     accuracy[idx] = accuracy_score(np.round(estimator.predict(X_test)), y_test)
     y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
     idx += 1
 
 logging.info("Best Scores of features  - Using RF Regression - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
-np.save('./Wdsi_end_seed_absolute.npy', y_pred_label) 
+#np.save('./volumetric_proba.npy', y_pred_proba) 
+
+#np.save('./Wdsi_end_seed_absolute.npy', y_pred_label) 
 
 importances = np.round(np.mean(subject_feature_importances, axis=0),decimals=2) 
 feature_importances = [(feature, round(importance, 2)) for feature, importance in zip(rfecv_feature_list, importances)]
