@@ -37,28 +37,28 @@ mRS_gt = extract_gt_mRS()
 
 # ======================================== Feature Extraction ================================= #
 
-logging.info('Extracting volumetric features...')
-volumetric_features, volumetric_list = extract_volumetric_features()
+#logging.info('Extracting volumetric features...')
+#volumetric_features, volumetric_list = extract_volumetric_features()
 
-logging.info('Extracting spatial features...')
-spatial_features, spatial_list = extract_spatial_features()
+#logging.info('Extracting spatial features...')
+#spatial_features, spatial_list = extract_spatial_features()
 
-logging.info('Extracting morphological features...')
-morphological_features, morphological_list = extract_morphological_features()
+#logging.info('Extracting morphological features...')
+#morphological_features, morphological_list = extract_morphological_features()
 
 
-logging.info('Extracting volumetric and spatial features...')
+#logging.info('Extracting volumetric and spatial features...')
 #atlas_name = 'HarvardOxfordSub'
-atlas_name = 'HarvardOxfordCort'
+#atlas_name = 'HarvardOxfordCort'
 #atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
 
-volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
+#volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
 logging.info('Extracting tractographic features...')
-region_type='roi'
+region_type='seed'
 logging.info(region_type)
 W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type)
 
@@ -70,13 +70,13 @@ logging.info('Completed feature extraction...')
 logging.info('Features normalization...')
 scaler = StandardScaler()
 
-normalized_volumetric_features = scaler.fit_transform(volumetric_features)
+#normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
-normalized_spatial_features = scaler.fit_transform(spatial_features)
+#normalized_spatial_features = scaler.fit_transform(spatial_features)
 
-normalized_morphological_features = scaler.fit_transform(morphological_features)
+#normalized_morphological_features = scaler.fit_transform(morphological_features)
 
-normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
+#normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
 
 ##normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass)
 ##normalized_W_nrm_pass = scaler.fit_transform(W_nrm_pass)
@@ -94,17 +94,17 @@ logging.info('Completed features normalization...')
 logging.info('Remove features with all zeros...')
 sel = VarianceThreshold(0)
 
-selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
-selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
+#selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
+#selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
 
-selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
-selected_spatial_list = [name for idx, name in enumerate(spatial_list) if sel.get_support()[idx]]
+#selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
+#selected_spatial_list = [name for idx, name in enumerate(spatial_list) if sel.get_support()[idx]]
 
-selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
-selected_morphological_list = [name for idx, name in enumerate(morphological_list) if sel.get_support()[idx]]
+#selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
+#selected_morphological_list = [name for idx, name in enumerate(morphological_list) if sel.get_support()[idx]]
 
-selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
-selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
+#selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
+#selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
 
 ##selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
 ##selected_normalized_W_nrm_pass = sel.fit_transform(normalized_W_nrm_pass)
@@ -137,54 +137,52 @@ selected_W_dsi_end_list = [name for idx, name in enumerate(tract_list) if sel.ge
 #X = selected_normalized_volumetric_spatial_features
 #feature_list = selected_volumetric_spatial_list
 
-#logging.info('Using Tractographic Features')
+logging.info('Using Tractographic Features')
 ##X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass
-#feature_list = selected_W_nrm_pass_list
+##feature_list = selected_W_nrm_pass_list
 ##X = selected_normalized_W_bin_pass_histogram_features
-##X = selected_normalized_W_dsi_end_histogram_features
+X = selected_normalized_W_dsi_end
+feature_list = selected_W_dsi_end_list
 ##X = selected_normalized_W_nrm_end_histogram_features
 ##X = selected_normalized_W_bin_end_histogram_features
 
 # ========================================== RFECV feature selection ====================================== #
 
 # Cross Validation Model
-loo = LeaveOneOut()
-estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
-rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
+#loo = LeaveOneOut()
+#estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
+#rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
 ##rfecv = RFECV(estimator,step=1, cv=loo, scoring='neg_mean_squared_error', n_jobs=-1)
 
-rfecv_selected_normalized_volumetric_features = rfecv.fit_transform(selected_normalized_volumetric_features, mRS_gt)
-rfecv_selected_volumetric_list = [name for idx, name in enumerate(selected_volumetric_list) if rfecv.get_support()[idx]]
-print(len(rfecv_selected_volumetric_list))
+#rfecv_selected_normalized_volumetric_features = rfecv.fit_transform(selected_normalized_volumetric_features, mRS_gt)
+#rfecv_selected_volumetric_list = [name for idx, name in enumerate(selected_volumetric_list) if rfecv.get_support()[idx]]
+#print(len(rfecv_selected_volumetric_list))
 
+#rfecv_selected_normalized_spatial_features = rfecv.fit_transform(selected_normalized_spatial_features, mRS_gt)
+#rfecv_selected_spatial_list = [name for idx, name in enumerate(selected_spatial_list) if rfecv.get_support()[idx]]
+#print(len(rfecv_selected_spatial_list))
 
-rfecv_selected_normalized_spatial_features = rfecv.fit_transform(selected_normalized_spatial_features, mRS_gt)
-rfecv_selected_spatial_list = [name for idx, name in enumerate(selected_spatial_list) if rfecv.get_support()[idx]]
-print(len(rfecv_selected_spatial_list))
+#rfecv_selected_normalized_morphological_features = rfecv.fit_transform(selected_normalized_morphological_features, mRS_gt)
+#rfecv_selected_morphological_list = [name for idx, name in enumerate(selected_morphological_list) if rfecv.get_support()[idx]]
+#print(len(rfecv_selected_morphological_list))
 
-rfecv_selected_normalized_morphological_features = rfecv.fit_transform(selected_normalized_morphological_features, mRS_gt)
-rfecv_selected_morphological_list = [name for idx, name in enumerate(selected_morphological_list) if rfecv.get_support()[idx]]
-print(len(rfecv_selected_morphological_list))
+#rfecv_selected_normalized_volumetric_spatial_features = rfecv.fit_transform(selected_normalized_volumetric_spatial_features, mRS_gt)
+#rfecv_selected_volumetric_spatial_list = [name for idx, name in enumerate(selected_volumetric_spatial_list) if rfecv.get_support()[idx]]
+#print(len(rfecv_selected_volumetric_spatial_list))
 
+#rfecv_selected_normalized_W_dsi_end = rfecv.fit_transform(selected_normalized_W_dsi_end, mRS_gt)
+#rfecv_selected_W_dsi_end_list = [name for idx, name in enumerate(selected_W_dsi_end_list) if rfecv.get_support()[idx]]
+#print(len(rfecv_selected_W_dsi_end_list))
 
-rfecv_selected_normalized_volumetric_spatial_features = rfecv.fit_transform(selected_normalized_volumetric_spatial_features, mRS_gt)
-rfecv_selected_volumetric_spatial_list = [name for idx, name in enumerate(selected_volumetric_spatial_list) if rfecv.get_support()[idx]]
-print(len(rfecv_selected_volumetric_spatial_list))
-
-
-rfecv_selected_normalized_W_dsi_end = rfecv.fit_transform(selected_normalized_W_dsi_end, mRS_gt)
-rfecv_selected_W_dsi_end_list = [name for idx, name in enumerate(selected_W_dsi_end_list) if rfecv.get_support()[idx]]
-print(len(rfecv_selected_W_dsi_end_list))
-
-rfecv_all_features = np.concatenate((rfecv_selected_normalized_volumetric_features, 
-	rfecv_selected_normalized_spatial_features, 
-	rfecv_selected_normalized_morphological_features, 
-	rfecv_selected_normalized_volumetric_spatial_features, 
-	rfecv_selected_normalized_W_dsi_end), axis=1)
-rfecv_feature_list = rfecv_selected_volumetric_list + rfecv_selected_spatial_list + rfecv_selected_morphological_list + rfecv_selected_volumetric_spatial_list + rfecv_selected_W_dsi_end_list
-X_rfecv = rfecv_all_features
-print(rfecv_all_features.shape, len(rfecv_feature_list))
+#rfecv_all_features = np.concatenate((rfecv_selected_normalized_volumetric_features, 
+#	rfecv_selected_normalized_spatial_features, 
+#	rfecv_selected_normalized_morphological_features, 
+#	rfecv_selected_normalized_volumetric_spatial_features, 
+#	rfecv_selected_normalized_W_dsi_end), axis=1)
+#rfecv_feature_list = rfecv_selected_volumetric_list + rfecv_selected_spatial_list + rfecv_selected_morphological_list + rfecv_selected_volumetric_spatial_list + rfecv_selected_W_dsi_end_list
+#X_rfecv = rfecv_all_features
+#print(rfecv_all_features.shape, len(rfecv_feature_list))
 
 # =============================================== Start Prediction ========================================= #
 
@@ -202,10 +200,10 @@ estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=19
 #logging.info('RFECV Feature selection...')
 # rfecv 
 #rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_squared_error', n_jobs=-1)
-#rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
-#X_rfecv = rfecv.fit_transform(X, y)
+rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
+X_rfecv = rfecv.fit_transform(X, y)
 logging.info('Random Froest Regression, Optimal number of features: %d' % X_rfecv.shape[1])
-#rfecv_feature_list = [name for idx, name in enumerate(feature_list) if rfecv.get_support()[idx]]
+rfecv_feature_list = [name for idx, name in enumerate(feature_list) if rfecv.get_support()[idx]]
 
 ##X_rfecv=X
 ##rfecv_feature_list = feature_list
@@ -228,7 +226,7 @@ for train_index, test_index in loo.split(X_rfecv):
     idx += 1
 
 logging.info("Best Scores of features  - Using RF Regression - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
-#np.save('./W_nrm_pass_roi_error.npy', y_abs_error) 
+np.save('./Wdsi_end_seed_absolute.npy', y_pred_label) 
 
 importances = np.round(np.mean(subject_feature_importances, axis=0),decimals=2) 
 feature_importances = [(feature, round(importance, 2)) for feature, importance in zip(rfecv_feature_list, importances)]
