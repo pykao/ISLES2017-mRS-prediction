@@ -38,8 +38,8 @@ mRS_gt = extract_gt_mRS()
 
 # ======================================== Feature Extraction ================================= #
 
-logging.info('Extracting volumetric features...')
-volumetric_features, volumetric_list = extract_volumetric_features()
+#logging.info('Extracting volumetric features...')
+#volumetric_features, volumetric_list = extract_volumetric_features()
 
 #logging.info('Extracting spatial features...')
 #spatial_features, spatial_list = extract_spatial_features()
@@ -58,12 +58,12 @@ volumetric_features, volumetric_list = extract_volumetric_features()
 
 #volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
-#logging.info('Extracting tractographic features...')
-#region_type='seed'
-#logging.info(region_type)
-#W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type)
+logging.info('Extracting tractographic features...')
+region_type='roi'
+logging.info(region_type)
+W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type)
 
-#logging.info('Completed feature extraction...')
+logging.info('Completed feature extraction...')
 
 
 
@@ -71,7 +71,7 @@ volumetric_features, volumetric_list = extract_volumetric_features()
 logging.info('Features normalization...')
 scaler = StandardScaler()
 
-normalized_volumetric_features = scaler.fit_transform(volumetric_features)
+#normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
 #normalized_spatial_features = scaler.fit_transform(spatial_features)
 
@@ -82,7 +82,7 @@ normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 ##normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass)
 ##normalized_W_nrm_pass = scaler.fit_transform(W_nrm_pass)
 ##normalized_W_bin_pass_histogram_features = scaler.fit_transform(W_bin_pass)
-#normalized_W_dsi_end = scaler.fit_transform(W_dsi_end)
+normalized_W_dsi_end = scaler.fit_transform(W_dsi_end)
 ##normalized_W_nrm_end_histogram_features = scaler.fit_transform(W_nrm_end)
 ##normalized_W_bin_end_histogram_features = scaler.fit_transform(W_bin_end)
 
@@ -95,8 +95,8 @@ logging.info('Completed features normalization...')
 logging.info('Remove features with all zeros...')
 sel = VarianceThreshold(0)
 
-selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
-selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
+#selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
+#selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
 
 #selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 #selected_spatial_list = [name for idx, name in enumerate(spatial_list) if sel.get_support()[idx]]
@@ -112,8 +112,8 @@ selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if 
 ##selected_W_nrm_pass_list = [name for idx, name in enumerate(tract_list) if sel.get_support()[idx]]
 ##selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
 
-#selected_normalized_W_dsi_end = sel.fit_transform(normalized_W_dsi_end)
-#selected_W_dsi_end_list = [name for idx, name in enumerate(tract_list) if sel.get_support()[idx]]
+selected_normalized_W_dsi_end = sel.fit_transform(normalized_W_dsi_end)
+selected_W_dsi_end_list = [name for idx, name in enumerate(tract_list) if sel.get_support()[idx]]
 
 ##selected_normalized_W_bin_pass_histogram_features = sel.fit_transform(normalized_W_bin_pass_histogram_features)
 ##selected_normalized_W_nrm_end_histogram_features = sel.fit_transform(normalized_W_nrm_end_histogram_features)
@@ -122,9 +122,9 @@ selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if 
 
 # ======================================= Select which feature to use ===================================== #
 
-logging.info('Using volumetric features')
-X = selected_normalized_volumetric_features
-feature_list = selected_volumetric_list
+#logging.info('Using volumetric features')
+#X = selected_normalized_volumetric_features
+#feature_list = selected_volumetric_list
 
 #logging.info('Using spatial features')
 #X = selected_normalized_spatial_features
@@ -138,13 +138,13 @@ feature_list = selected_volumetric_list
 #X = selected_normalized_volumetric_spatial_features
 #feature_list = selected_volumetric_spatial_list
 
-#logging.info('Using Tractographic Features')
+logging.info('Using Tractographic Features')
 ##X = selected_normalized_W_dsi_pass_histogram_features
 #X = selected_normalized_W_nrm_pass
 ##feature_list = selected_W_nrm_pass_list
 ##X = selected_normalized_W_bin_pass_histogram_features
-#X = selected_normalized_W_dsi_end
-#feature_list = selected_W_dsi_end_list
+X = selected_normalized_W_dsi_end
+feature_list = selected_W_dsi_end_list
 ##X = selected_normalized_W_nrm_end_histogram_features
 ##X = selected_normalized_W_bin_end_histogram_features
 
@@ -194,10 +194,8 @@ logging.info('Stratified K-Fold')
 n_splits=3
 skf = StratifiedKFold(n_splits=n_splits, random_state=1995)
 
-#accuracy = np.zeros((37,1), dtype=np.float32)
 y_pred_label = np.zeros((37,), dtype=np.float32)
 y_gt = np.zeros((37,), dtype=np.float32)
-#y_pred_proba = np.zeros((37,5), dtype=np.float32)
 
 # ======================== Volumetric, Spatial, Morphological, Volumetric Spatial Features ================= #
 estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
@@ -229,8 +227,8 @@ for train_index, test_index in skf.split(X_rfecv, y):
     y_gt[idx:idx+y_test.shape[0]] = y_test
     idx += y_test.shape[0]
 
-y_abs_error = np.absolute(y_pred_label-y_gt)
-np.save('./rfr_volumetric_pred_skf.npy', y_pred_label)
+y_abs_error = np.absolute(y_pred_label - y_gt)
+np.save('./rfr_aal_Wdsi_end_pred_skf.npy', y_pred_label)
 
 logging.info("Best Scores of features  - Using RF Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(accuracy_score(y_gt, y_pred_label), np.mean(y_abs_error), np.std(y_abs_error)))
 
