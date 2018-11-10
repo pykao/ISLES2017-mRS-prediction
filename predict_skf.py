@@ -7,7 +7,7 @@ import SimpleITK as sitk
 import numpy as np
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import RepeatedStratifiedKFold, LeaveOneOut
+from sklearn.model_selection import RepeatedStratifiedKFold, LeaveOneOut, StratifiedKFold
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import RFECV
 from sklearn import svm
@@ -31,6 +31,7 @@ console.setLevel(logging.INFO)
 console.setFormatter(logging.Formatter(fmt))
 logging.getLogger('').addHandler(console)
 
+logging.info('=============== Start ===============')
 # ============================================ The target ===================================== #
 logging.info('Extracting mRS scores...')
 mRS_gt = extract_gt_mRS()
@@ -189,48 +190,64 @@ feature_list = selected_volumetric_list
 y = mRS_gt
 
 # Cross Validation Model
-loo = LeaveOneOut()
+logging.info('Stratified K-Fold')
+n_splits=3
+skf = StratifiedKFold(n_splits=n_splits, random_state=1995)
 
-accuracy = np.zeros((37,1), dtype=np.float32)
-y_pred_label = np.zeros((37,1), dtype=np.float32)
-y_abs_error = np.zeros((37,1), dtype=np.float32)
+#accuracy = np.zeros((37,1), dtype=np.float32)
+y_pred_label = np.zeros((37,), dtype=np.float32)
+y_gt = np.zeros((37,), dtype=np.float32)
 #y_pred_proba = np.zeros((37,5), dtype=np.float32)
 
 # ======================== Volumetric, Spatial, Morphological, Volumetric Spatial Features ================= #
 estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
-#logging.info('RFECV Feature selection...')
+#estimator = RandomForestClassifier(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
+logging.info('RFECV Feature selection...')
 # rfecv 
+rfecv = RFECV(estimator, step=1, cv=skf, scoring='neg_mean_absolute_error', n_jobs=-1)
 #rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_squared_error', n_jobs=-1)
-rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
+#rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
 X_rfecv = rfecv.fit_transform(X, y)
-logging.info('Random Froest Regression, Optimal number of features: %d' % X_rfecv.shape[1])
+logging.info('Random Froest Regressor, Optimal number of features: %d' % X_rfecv.shape[1])
 rfecv_feature_list = [name for idx, name in enumerate(feature_list) if rfecv.get_support()[idx]]
 
 ##X_rfecv=X
 ##rfecv_feature_list = feature_list
 
-subject_feature_importances = np.zeros((37,len(rfecv_feature_list)), dtype=np.float32)
+#subject_feature_importances = np.zeros((37,len(rfecv_feature_list)), dtype=np.float32)
 
 logging.info('Predicting...')
 idx = 0
-for train_index, test_index in loo.split(X_rfecv):
+for train_index, test_index in skf.split(X_rfecv, y):
     X_train, X_test = X_rfecv[train_index], X_rfecv[test_index]
     y_train, y_test = y[train_index], y[test_index]
     # RF Regression
     estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
+    #estimator = RandomForestClassifier(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
     estimator.fit(X_train, y_train)
-    subject_importance = estimator.feature_importances_
-    subject_feature_importances[idx,:] = subject_importance
+    y_pred_label[idx:idx+y_test.shape[0]] = np.round(estimator.predict(X_test))
+    y_gt[idx:idx+y_test.shape[0]] = y_test
+    idx += y_test.shape[0]
+
+y_abs_error = np.absolute(y_pred_label-y_gt)
+np.save('./rfr_volumetric_pred_skf.npy', y_pred_label)
+
+logging.info("Best Scores of features  - Using RF Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(accuracy_score(y_gt, y_pred_label), np.mean(y_abs_error), np.std(y_abs_error)))
+
+'''
+    #subject_importance = estimator.feature_importances_
+    #subject_feature_importances[idx,:] = subject_importance
     y_pred_label[idx] = np.round(estimator.predict(X_test))
     #y_pred_proba[idx, :] = estimator.predict_proba(X_test)
     accuracy[idx] = accuracy_score(np.round(estimator.predict(X_test)), y_test)
     y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
     idx += 1
 
-logging.info("Best Scores of features  - Using RF Regression - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
-#np.save('./volumetric_proba.npy', y_pred_proba) 
+logging.info("Best Scores of features  - Using RF Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
+#np.save('./rfc_volumetric_proba.npy', y_pred_proba) 
 
 #np.save('./Wdsi_end_seed_absolute.npy', y_pred_label) 
+np.save('./rfc_volumetric_absolute.npy', y_pred_label)
 
 importances = np.round(np.mean(subject_feature_importances, axis=0),decimals=2) 
 feature_importances = [(feature, round(importance, 2)) for feature, importance in zip(rfecv_feature_list, importances)]
@@ -240,7 +257,7 @@ feature_importances = sorted(feature_importances, key = lambda x: x[1], reverse 
 [logging.info('Variable: {:30} Importance: {}'.format(*pair)) for pair in feature_importances]
 
 
-'''
+
 # ================================= Tractographic Features =================================================== #
 
 tractographic_feature_list = ['W_dis_pass', 'W_nrm_pass', 'W_bin_pass', 'W_dsi_end', 'W_nrm_end', 'W_bin_end']

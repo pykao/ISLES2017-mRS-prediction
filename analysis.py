@@ -42,36 +42,28 @@ def plot_confusion_matrix(cm, classes,
     plt.show()
 
 mRS = extract_gt_mRS()
-volumetric_pred = np.load('./volumetric_pred_absolute.npy')
-spatial_pred = np.load('./spatial_pred_absolute.npy')
-morphological_pred = np.load('./morphological_pred_absolute.npy')
-HarvardOxfordCort_pred = np.load('./HarvardOxfordCort_pred_absolute.npy')
-aal_pred = np.load('./aal_pred_absolute.npy')
-Wdsi_end_roi_pred = np.load('./Wdsi_end_roi_absolute.npy')
+volumetric_pred = np.load('./rfr_loo/rfr_volumetric_pred_loo.npy')
+spatial_pred = np.load('./rfr_loo/rfr_spatial_pred_loo.npy')
+morphological_pred = np.load('./rfr_loo/rfr_morphological_pred_loo.npy')
+HarvardOxfordCort_pred = np.load('./rfr_loo/rfr_HarvardOxfordCort_pred_loo.npy')
+aal_pred = np.load('./rfr_loo/rfr_aal_pred_loo.npy')
+aal_Wdsi_end_roi_pred = np.load('./rfr_loo/rfr_aal_Wdsi_end_roi_pred_loo.npy')
 
 
 y = mRS.reshape((37,1))
-all_decision = np.concatenate((volumetric_pred, spatial_pred, morphological_pred, HarvardOxfordCort_pred, Wdsi_end_roi_pred), axis=1)
+#all_decision = np.concatenate((volumetric_pred, spatial_pred, morphological_pred, HarvardOxfordCort_pred, Wdsi_end_roi_pred), axis=1)
 
-majority_vote = Wdsi_end_roi_pred
-majority_vote[12] = 2
-majority_vote[19] = 2
-majority_vote[20] = 2
-majority_vote[26] = 2
-majority_vote[28] = 1
-majority_ae = np.absolute(y-majority_vote)
-print(y)
-#volumetric_ae = np.absolute(y-volumetric_pred)
-#tractographic_ae = np.absolute(y-Wdsi_end_roi_pred)
-#spatial_ae = np.absolute(y-spatial_pred)
-#morphological_ae = np.absolute(y-morphological_pred)
-#HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
-#aal_ae = np.absolute(y-aal_pred)
-#print(stats.ttest_rel(aal_ae, spatial_ae))
+tractographic_ae = np.absolute(y-aal_Wdsi_end_roi_pred)
+volumetric_ae = np.absolute(y-volumetric_pred)
+spatial_ae = np.absolute(y-spatial_pred)
+morphological_ae = np.absolute(y-morphological_pred)
+HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
+aal_ae = np.absolute(y-aal_pred)
+print(stats.ttest_rel(tractographic_ae, aal_ae))
 
 #print(np.median(HarvardOxfordCort_ae))
-cnf_matrix_volume = confusion_matrix(mRS, majority_vote)
-np.set_printoptions(precision=2)
-plt.figure()
-plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
-                      title='Confusion matrix(Tractographic Features)')
+#cnf_matrix_volume = confusion_matrix(mRS, aal_Wdsi_end_roi_pred)
+#np.set_printoptions(precision=2)
+#plt.figure()
+#plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
+#                      title='Confusion matrix(Tractographic Features)')
