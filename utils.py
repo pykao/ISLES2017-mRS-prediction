@@ -88,7 +88,7 @@ def get_train_dataset():
                     train_dataset[line[0]]['TSS'] = line[4]
                     train_dataset[line[0]]['TTT'] = line[5]
                     train_dataset[line[0]]['ID'] = gt_file[0][-10:-4]
-    return train_dataset   
+    return train_dataset
 
 # Get the mRS for training subject from training_1 to training_48
 def extract_gt_mRS():
