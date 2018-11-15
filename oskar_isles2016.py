@@ -9,6 +9,13 @@ import math
 from skimage.morphology import dilation,disk
 import nibabel as nib
 import csv
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import LeaveOneOut
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import VarianceThreshold, RFECV
+from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
+
 
 def get_train_dataset():    
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
@@ -34,9 +41,59 @@ def get_train_dataset():
                     train_dataset[line[0]]['ID'] = gt_file[0][-10:-4]
     return train_dataset
 
+def twenty_two_statistics_of_feature(feature):
+    statistics = np.zeros((1, 22))
+    idx = 0 
+    for p in np.linspace(0,100,10):
+        statistics[0, idx] = np.percentile(feature, p)
+        idx += 1
+    statistics[0, idx] = np.std(feature)
+    idx += 1
+    statistics[0, idx] = np.var(feature)
+    idx += 1
+    statistics[0, idx:] = np.histogram(feature)[0]
+    return statistics
+
+def statistics_of_a_feature(image_features):
+    for idx in range(image_features.shape[0]):
+        if idx == 0:
+            statistics = twenty_two_statistics_of_feature(image_features[idx,:])
+        else:
+            statistics = np.hstack((statistics, twenty_two_statistics_of_feature(image_features[idx,:])))
+    return statistics
+
+def statistics_of_features(first_region_image_features, second_region_image_features, third_region_image_features):
+    first_region_statistics_of_features = statistics_of_a_feature(first_region_image_features)
+    second_region_statistics_of_features = statistics_of_a_feature(second_region_image_features)
+    third_region_statistics_of_features = statistics_of_a_feature(third_region_image_features)
+    all_statistics_of_features = np.hstack((first_region_statistics_of_features, second_region_statistics_of_features))
+    all_statistics_of_features = np.hstack((all_statistics_of_features, third_region_statistics_of_features))
+    return all_statistics_of_features
+
+def image_features(img, pixel_spacing, bands, mask):
+    img_intensities = intensities(img, mask=mask).reshape(1, -1)
+    img_local_mean_gauss_3mm = local_mean_gauss(img, sigma=3, voxelspacing=pixel_spacing, mask=mask).reshape(1, -1)
+    all_image_features = np.vstack((img_intensities,img_local_mean_gauss_3mm))
+    img_local_mean_gauss_5mm = local_mean_gauss(img, sigma=5, voxelspacing=pixel_spacing, mask=mask).reshape(1, -1)
+    all_image_features = np.vstack((all_image_features,img_local_mean_gauss_5mm))
+    img_local_mean_gauss_7mm = local_mean_gauss(img, sigma=7, voxelspacing=pixel_spacing, mask=mask).reshape(1, -1)
+    all_image_features = np.vstack((all_image_features,img_local_mean_gauss_7mm))
+    img_hemispheric_difference = hemispheric_difference(img, voxelspacing=pixel_spacing, mask=mask).reshape(1, -1)
+    all_image_features = np.vstack((all_image_features,img_hemispheric_difference))
+    img_local_histogram= local_histogram(img, bins=20, size=bands, mask=mask).reshape(20, -1)
+    all_image_features = np.vstack((all_image_features,img_local_histogram))
+    return all_image_features
+
+def find_3d_surface(mask, voxel_spacing):
+	verts, faces = marching_cubes_classic(volume=mask, spacing=voxel_spacing)
+	return mesh_surface_area(verts, faces)
+
+
 training_dataset = get_train_dataset()
 
 mRS_gt = np.zeros((37,))
+
+all_features = np.zeros((37, 1656))
 
 for idx, training_folder in enumerate(training_dataset.keys()):
     # adc direction    
@@ -51,49 +108,82 @@ for idx, training_folder in enumerate(training_dataset.keys()):
     stroke_dir = stroke_temp[0]
     
     # find the three region
-    band = 5.0
+    band = 5.0 
     stroke_mask, stroke_header = load(stroke_dir)
-    img = nib.load(stroke_dir)
-    #print(img.affine)
     adc_data, adc_header = load(adc_dir)
 
 
     pixel_spacing = header.get_pixel_spacing(stroke_header)
-    x_band, y_band, z_band = math.ceil(band/pixel_spacing[0]), math.ceil(band/pixel_spacing[1]), math.ceil(band/pixel_spacing[2])
-    print(x_band, y_band, z_band)
-    #print(disk(x_band))
+    voxel_volume = pixel_spacing[0]*pixel_spacing[1]*pixel_spacing[2]
+    bands = (int(math.ceil(band/pixel_spacing[0])), int(math.ceil(band/pixel_spacing[1])), int(math.ceil(band/pixel_spacing[2])))
     
     dilated_stroke_mask = np.copy(stroke_mask)
     # dialation in 2D plane 
     for z_idx in range(stroke_mask.shape[2]):
-        dilated_stroke_mask[:,:,z_idx] = dilation(stroke_mask[:,:,z_idx], disk(x_band))
+        dilated_stroke_mask[:,:,z_idx] = dilation(stroke_mask[:,:,z_idx], disk(bands[0]))
 
-    #print(np.count_nonzero(dilated_stroke_mask), np.count_nonzero(stroke_mask))
     brain_mask = np.zeros(stroke_mask.shape)
     brain_mask[adc_data>0] = 1
-    #print(np.count_nonzero(brain_mask))
     
+    # Create three regions
+
     first_region = stroke_mask
     second_region = dilated_stroke_mask - stroke_mask
     third_region = brain_mask - dilated_stroke_mask
-    #print(np.count_nonzero(first_region), np.count_nonzero(second_region), np.count_nonzero(third_region))
-    
-    first_region_intensities = intensities(adc_data, mask=first_region)
-    first_region_local_mean_gauss_3mm = local_mean_gauss(adc_data, sigma=3, voxelspacing=pixel_spacing, mask=first_region)
-    first_region_local_mean_gauss_5mm = local_mean_gauss(adc_data, sigma=5, voxelspacing=pixel_spacing, mask=first_region)
-    first_region_local_mean_gauss_7mm = local_mean_gauss(adc_data, sigma=7, voxelspacing=pixel_spacing, mask=first_region)
-    first_region_hemispheric_difference = hemispheric_difference(adc_data, voxelspacing=pixel_spacing, mask=first_region)
-    first_region_local_histogram= local_histogram(adc_data, bins=20, footprint=(x_band, y_band, z_band),  mask=first_region)
-    print(np.mean(first_region_intensities), np.mean(first_region_local_mean_gauss_3mm), np.mean(first_region_local_mean_gauss_5mm), np.mean(first_region_local_mean_gauss_7mm), np.mean(first_region_hemispheric_difference))
-    print(first_region_local_histogram)
+    first_region_image_features = image_features(adc_data, pixel_spacing, bands, first_region)
+    second_region_image_features = image_features(adc_data, pixel_spacing, bands, second_region)
+    third_region_image_features = image_features(adc_data, pixel_spacing, bands, third_region)
+    all_features[idx, 0:1650] = statistics_of_features(first_region_image_features, second_region_image_features, third_region_image_features)
+
+    first_region_props = regionprops(first_region.astype(int))
+    first_region_area = first_region_props[0].area*voxel_volume
+    first_region_equivDiameter = (6.0*first_region_area/math.pi)**(1.0/3.0)
+    first_region_surface = find_3d_surface(first_region, pixel_spacing)
+    print(first_region_surface)
+    second_region_props = regionprops(second_region.astype(int))
+    second_region_area = second_region_props[0].area*voxel_volume
+    second_region_equivDiameter = (6.0*second_region_area/math.pi)**(1.0/3.0)
+    second_region_surface = find_3d_surface(second_region, pixel_spacing)
+    print(second_region_surface)
+    third_region_props = regionprops(third_region.astype(int))
+    third_region_area = third_region_props[0].area*voxel_volume
+    third_region_equivDiameter = (6.0*third_region_area/math.pi)**(1.0/3.0)
+    third_region_surface = find_3d_surface(third_region, pixel_spacing)
+    print(third_region_surface)
+    all_features[idx, 1650:1653] = first_region_area, second_region_area, third_region_area
+    all_features[idx, 1653:1656] = first_region_equivDiameter, second_region_equivDiameter, third_region_equivDiameter
+
 '''
-    hemispheric_difference_data = hemispheric_difference(adc_dir)
+sel = VarianceThreshold(threshold=(.5 * (1 - .5)))
+selected_all_features = sel.fit_transform(all_features)
 
+scaler = StandardScaler()
+normalized_selected_all_features = scaler.fit_transform(selected_all_features)
 
-first_region_img = nib.Nifti1Image(first_region, img.affine)
-nib.save(first_region_img, './first.nii')
-second_region_img = nib.Nifti1Image(second_region, img.affine)
-nib.save(second_region_img, './second.nii')
-third_region_img = nib.Nifti1Image(third_region, img.affine)
-nib.save(third_region_img, './third.nii')
+X = all_features
+y = mRS_gt
+
+loo = LeaveOneOut()
+estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
+#rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
+#X_rfecv = rfecv.fit_transform(X, y)
+X_rfecv = X
+
+y_pred_label = np.zeros((37,1), dtype=np.float32)
+accuracy = np.zeros((37,1), dtype=np.float32)
+y_abs_error = np.zeros((37,1), dtype=np.float32)
+
+for train_index, test_index in loo.split(X_rfecv):
+    X_train, X_test = X_rfecv[train_index], X_rfecv[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+    estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
+    estimator.fit(X_train, y_train)
+    y_pred = estimator.predict(X_test)
+    y_pred_label[idx] = np.round(y_pred)
+    accuracy[idx] = accuracy_score(np.round(y_pred), y_test)
+    y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
+
+np.save('./oskar_ISLES2016.npy', y_pred_label)
+
+print("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
 '''
