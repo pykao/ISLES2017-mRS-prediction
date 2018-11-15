@@ -57,8 +57,9 @@ HarvardOxfordCort_pred = np.load('./rfr_loo/rfr_HarvardOxfordCort_pred_loo.npy')
 aal_pred = np.load('./rfr_loo/rfr_aal_pred_loo.npy')
 aal_ori_pred = np.load('./rfr_loo/rfr_aal_ori_pred_loo.npy')
 aal_Wdsi_end_roi_pred = np.load('./rfr_loo/rfr_aal_Wdsi_end_roi_pred_loo.npy')
+oskar_isles2016_pred = np.load('./rfr_loo/oskar_ISLES2016.npy')
 
-y = mRS.reshape((37,1))
+#y = mRS.reshape((37,1))
 
 
 #tractographic_ae = np.absolute(y-aal_Wdsi_end_roi_pred)
@@ -72,8 +73,8 @@ y = mRS.reshape((37,1))
 #print(np.median(HarvardOxfordCort_ae))
 
 # confusion_matrix(y_true, y_pred)
-cnf_matrix_volume = confusion_matrix(mRS, aal_ori_pred)
+cnf_matrix_volume = confusion_matrix(mRS, oskar_isles2016_pred)
 np.set_printoptions(precision=2)
 plt.figure()
 plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
-                      title='Confusion matrix(AAL ori Features)')
+                      title='Confusion matrix(Oskar ISLES 2016)')
