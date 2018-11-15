@@ -7,3 +7,4 @@ rfc*
 rfr*
 *.nii
 *.nii.gz
+*.pyc
