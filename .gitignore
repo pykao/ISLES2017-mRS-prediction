@@ -8,3 +8,4 @@ rfr*
 *.nii
 *.nii.gz
 *.pyc
+test.py
