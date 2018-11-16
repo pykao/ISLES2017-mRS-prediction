@@ -104,13 +104,13 @@ all_features = np.zeros((37, 1662))
 
 for idx, training_folder in enumerate(training_dataset.keys()):
     # adc direction    
-    adc_temp = [os.path.join(root, name) for root, dirs, files in os.walk(os.path.join(paths.isles2017_training_dir,training_folder))
+    adc_temp = [os.path.join(root, name) for root, dirs, files in os.walk(os.path.join(isles2017_training_dir,training_folder))
     for name in files if 'ADC' in name and 'MNI' not in name and name.endswith('.nii')]
     adc_dir = adc_temp[0]
     # Ground-truth mRS scores
     mRS_gt[idx] = training_dataset[training_folder]['mRS']
     # Ground-truth lesion mask
-    stroke_temp = [os.path.join(root, name) for root, dirs, files in os.walk(os.path.join(paths.isles2017_training_dir, training_folder))
+    stroke_temp = [os.path.join(root, name) for root, dirs, files in os.walk(os.path.join(isles2017_training_dir, training_folder))
     for name in files if '.OT.' in name and 'MNI' not in name and name.endswith('.nii')]
     stroke_dir = stroke_temp[0]
     
@@ -166,27 +166,38 @@ for idx, training_folder in enumerate(training_dataset.keys()):
     all_features[idx, 1656:1659] = first_region_surface, second_region_surface, third_region_surface
     all_features[idx, 1659:1662] = first_region_roundness, second_region_roundness, third_region_roundness
 
-X = all_features
 y = mRS_gt
+
+sel = VarianceThreshold(0.5*(1-0.5))
+selected_all_features = sel.fit_transform(all_features)
+
+scaler = StandardScaler()
+normalized_selected_all_features = scaler.fit_transform(selected_all_features)
 
 # Leave One Out Cross Validation
 loo = LeaveOneOut()
+#estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
+#rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
+#X = rfecv.fit_transform(normalized_selected_all_features, y)
+X = all_features
+
 
 y_pred_label = np.zeros((37,1), dtype=np.float32)
-accuracy = np.zeros((37,1), dtype=np.float32)
 y_abs_error = np.zeros((37,1), dtype=np.float32)
-
+idx=0
 for train_index, test_index in loo.split(X):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
-    estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
+    #estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
+    estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
     estimator.fit(X_train, y_train)
     y_pred = estimator.predict(X_test)
     y_pred_label[idx] = np.round(y_pred)
-    print(y_pred)
-    accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
     y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
+    idx += 1
 
-np.save('./oskar_ISLES2016.npy', y_pred_label)
+accouracy = accuracy_score(y, y_pred_label)
 
-print("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
+np.save('./rfr_oskarISLES2016.npy', y_pred_label)
+
+print("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(accouracy, np.mean(y_abs_error), np.std(y_abs_error)))

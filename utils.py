@@ -3,9 +3,10 @@ import numpy as np
 import os
 import paths
 import csv
+import math
 
 from scipy.io import loadmat
-from skimage.measure import regionprops
+from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
 
 def ReadImage(path):
     ''' This code returns the numpy nd array for a MR image at path'''
@@ -14,6 +15,17 @@ def ReadImage(path):
 def find_list(subject_id, list):
     files = [file for file in list if subject_id in file]
     return files[0]
+
+def find_3d_surface(mask, voxel_spacing=(1.0,1.0,1.0)):
+	verts, faces = marching_cubes_classic(volume=mask, spacing=voxel_spacing)
+	return mesh_surface_area(verts, faces)
+
+def find_3d_roundness(mask):
+	mask_region_props = regionprops(mask.astype(int))
+	mask_area = mask_region_props[0].area
+	mask_equivDiameter = (6.0*mask_area/math.pi)**(1.0/3.0)
+	mask_major_axis_length = mask_region_props[0].major_axis_length
+	return mask_equivDiameter**2/mask_major_axis_length**2
 
 def reshape_by_padding_upper_coords(image, new_shape, pad_value=None):
     shape = tuple(list(image.shape))
@@ -144,9 +156,9 @@ def extract_morphological_features():
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     assert(len(stroke_mni_paths) == 43)
-    morphological_list = ["major", "minor", "major/minor", "solidity"]
+    morphological_list = ["major", "minor", "major/minor", "surface", "solidity", "roundness"]
     # Volumetric Features
-    morphological_features = np.zeros((37,4), dtype=np.float32)
+    morphological_features = np.zeros((37,6), dtype=np.float32)
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
@@ -155,7 +167,9 @@ def extract_morphological_features():
         stroke_regions = regionprops(stroke_mni_nda.astype(int))
         stroke_major_axis_length = stroke_regions[0].major_axis_length
         stroke_minor_axis_length = stroke_regions[0].minor_axis_length
-        morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_regions[0].solidity
+        stroke_surface = find_3d_surface(stroke_mni_nda.astype(int))
+        stroke_roundness = find_3d_roundness(stroke_mni_nda.astype(int))
+        morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_surface, stroke_regions[0].solidity, stroke_roundness
     return morphological_features, morphological_list
 
 def extract_tractographic_features(region_type='roi'):

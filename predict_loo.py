@@ -43,22 +43,22 @@ mRS_gt = extract_gt_mRS()
 #logging.info('Extracting spatial features...')
 #spatial_features, spatial_list = extract_spatial_features()
 
-#logging.info('Extracting morphological features...')
-#morphological_features, morphological_list = extract_morphological_features()
+logging.info('Extracting morphological features...')
+morphological_features, morphological_list = extract_morphological_features()
 
 
-logging.info('Extracting volumetric and spatial features...')
+#logging.info('Extracting volumetric and spatial features...')
 #atlas_name = 'HarvardOxfordSub'
 #atlas_name = 'HarvardOxfordCort'
-atlas_name = 'aal'
+#atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
-volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
+#volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
 # original atlas
-volumetric_spatial_features = volumetric_spatial_features[:, 1:]
-del volumetric_spatial_list[0]
+#volumetric_spatial_features = volumetric_spatial_features[:, 1:]
+#del volumetric_spatial_list[0]
 #print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
 
 #logging.info('Extracting tractographic features...')
@@ -79,9 +79,9 @@ scaler = StandardScaler()
 
 #normalized_spatial_features = scaler.fit_transform(spatial_features)
 
-#normalized_morphological_features = scaler.fit_transform(morphological_features)
+normalized_morphological_features = scaler.fit_transform(morphological_features)
 
-normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
+#normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
 
 ##normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass)
 ##normalized_W_nrm_pass = scaler.fit_transform(W_nrm_pass)
@@ -109,11 +109,11 @@ sel = VarianceThreshold(0)
 #selected_normalized_spatial_features = sel.fit_transform(normalized_spatial_features)
 #selected_spatial_list = [name for idx, name in enumerate(spatial_list) if sel.get_support()[idx]]
 
-#selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
-#selected_morphological_list = [name for idx, name in enumerate(morphological_list) if sel.get_support()[idx]]
+selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
+selected_morphological_list = [name for idx, name in enumerate(morphological_list) if sel.get_support()[idx]]
 
-selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
-selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
+#selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
+#selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
 
 ##selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
 ##selected_normalized_W_nrm_pass = sel.fit_transform(normalized_W_nrm_pass)
@@ -140,13 +140,13 @@ selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_s
 #X = selected_normalized_spatial_features
 #feature_list = selected_spatial_list
 
-#logging.info("Using morphological features...")
-#X = selected_normalized_morphological_features
-#feature_list = selected_morphological_list
+logging.info("Using morphological features...")
+X = selected_normalized_morphological_features
+feature_list = selected_morphological_list
 
-logging.info('Using Volumetric and Spatial Features....')
-X = selected_normalized_volumetric_spatial_features
-feature_list = selected_volumetric_spatial_list
+#logging.info('Using Volumetric and Spatial Features....')
+#X = selected_normalized_volumetric_spatial_features
+#feature_list = selected_volumetric_spatial_list
 
 #logging.info('Using Tractographic Features')
 ##X = selected_normalized_W_dsi_pass_histogram_features
@@ -254,10 +254,10 @@ logging.info("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f ,
 
 #np.save('./rfc_volumetric_pred_loo.npy', y_pred_label) 
 #np.save('./rfc_spatial_pred_loo.npy', y_pred_label)
-#np.save('./rfc_morphological_pred_loo.npy', y_pred_label)
+np.save('./rfc_morphological_pred_loo.npy', y_pred_label)
 #np.save('./rfc_HarvardOxfordSub_pred_loo.npy', y_pred_label)
 #np.save('./rfr_HarvardOxfordCort_ori_pred_loo.npy', y_pred_label)
-np.save('./rfc_aal_ori_pred_loo.npy', y_pred_label)
+#np.save('./rfc_aal_ori_pred_loo.npy', y_pred_label)
 #np.save('./rfc_JHU_pred_loo.npy', y_pred_label)
 #np.save('./rfc_MNI_pred_loo.npy', y_pred_label)
 #np.save('./rfc_OASIS_pred_loo.npy', y_pred_label)
