@@ -88,12 +88,19 @@ def find_3d_surface(mask, voxel_spacing):
 	verts, faces = marching_cubes_classic(volume=mask, spacing=voxel_spacing)
 	return mesh_surface_area(verts, faces)
 
+def find_3d_roundness(mask):
+	mask_region_props = regionprops(mask.astype(int))
+	mask_area = mask_region_props[0].area
+	mask_equivDiameter = (6.0*mask_area/math.pi)**(1.0/3.0)
+	mask_major_axis_length = mask_region_props[0].major_axis_length
+	return mask_equivDiameter**2/mask_major_axis_length**2
+
 
 training_dataset = get_train_dataset()
 
 mRS_gt = np.zeros((37,))
 
-all_features = np.zeros((37, 1656))
+all_features = np.zeros((37, 1662))
 
 for idx, training_folder in enumerate(training_dataset.keys()):
     # adc direction    
@@ -130,30 +137,35 @@ for idx, training_folder in enumerate(training_dataset.keys()):
     first_region = stroke_mask
     second_region = dilated_stroke_mask - stroke_mask
     third_region = brain_mask - dilated_stroke_mask
+
+    # Extract 1650 image features
     first_region_image_features = image_features(adc_data, pixel_spacing, bands, first_region)
     second_region_image_features = image_features(adc_data, pixel_spacing, bands, second_region)
     third_region_image_features = image_features(adc_data, pixel_spacing, bands, third_region)
     all_features[idx, 0:1650] = statistics_of_features(first_region_image_features, second_region_image_features, third_region_image_features)
 
+
+    # Extract 12 shape features
     first_region_props = regionprops(first_region.astype(int))
     first_region_area = first_region_props[0].area*voxel_volume
     first_region_equivDiameter = (6.0*first_region_area/math.pi)**(1.0/3.0)
     first_region_surface = find_3d_surface(first_region, pixel_spacing)
-    print(first_region_surface)
+    first_region_roundness = find_3d_roundness(first_region)
     second_region_props = regionprops(second_region.astype(int))
     second_region_area = second_region_props[0].area*voxel_volume
     second_region_equivDiameter = (6.0*second_region_area/math.pi)**(1.0/3.0)
     second_region_surface = find_3d_surface(second_region, pixel_spacing)
-    print(second_region_surface)
+    second_region_roundness = find_3d_roundness(second_region)
     third_region_props = regionprops(third_region.astype(int))
     third_region_area = third_region_props[0].area*voxel_volume
     third_region_equivDiameter = (6.0*third_region_area/math.pi)**(1.0/3.0)
     third_region_surface = find_3d_surface(third_region, pixel_spacing)
-    print(third_region_surface)
+    third_region_roundness = find_3d_roundness(third_region)
     all_features[idx, 1650:1653] = first_region_area, second_region_area, third_region_area
     all_features[idx, 1653:1656] = first_region_equivDiameter, second_region_equivDiameter, third_region_equivDiameter
+    all_features[idx, 1656:1659] = first_region_surface, second_region_surface, third_region_surface
+    all_features[idx, 1659:1662] = first_region_roundness, second_region_roundness, third_region_roundness
 
-'''
 sel = VarianceThreshold(threshold=(.5 * (1 - .5)))
 selected_all_features = sel.fit_transform(all_features)
 
@@ -162,6 +174,7 @@ normalized_selected_all_features = scaler.fit_transform(selected_all_features)
 
 X = all_features
 y = mRS_gt
+print(X.shape, y.shape)
 
 loo = LeaveOneOut()
 estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
@@ -186,4 +199,3 @@ for train_index, test_index in loo.split(X_rfecv):
 np.save('./oskar_ISLES2016.npy', y_pred_label)
 
 print("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
-'''
