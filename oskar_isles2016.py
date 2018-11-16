@@ -2,8 +2,6 @@ import medpy
 from medpy.io import load, header, save
 from medpy.features.intensity import intensities, local_mean_gauss, hemispheric_difference, local_histogram
 import os
-import paths
-import utils
 import numpy as np
 import math
 from skimage.morphology import dilation,disk
@@ -17,12 +15,12 @@ from sklearn.feature_selection import VarianceThreshold, RFECV
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
 
 
-def get_train_dataset():    
-    gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
+def get_train_dataset(isles2017_dir, isles2017_training_dir):    
+    gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     gt_subject_paths.sort()
     # The CSV file for train dataset
     train_mRS_file = "ISLES2017_Training.csv"
-    train_mRS_path = os.path.join(paths.isles2017_dir, train_mRS_file)
+    train_mRS_path = os.path.join(isles2017_dir, train_mRS_file)
     assert(os.path.isfile(train_mRS_path))
     # Read CSV file for Train dataset
     train_dataset = {}
@@ -95,8 +93,10 @@ def find_3d_roundness(mask):
 	mask_major_axis_length = mask_region_props[0].major_axis_length
 	return mask_equivDiameter**2/mask_major_axis_length**2
 
+isles2017_dir = "/media/pkao/Dataset/ISLES2017"
+isles2017_training_dir = "/media/pkao/Dataset/ISLES2017/train"
 
-training_dataset = get_train_dataset()
+training_dataset = get_train_dataset(isles2017_dir, isles2017_training_dir)
 
 mRS_gt = np.zeros((37,))
 
@@ -166,34 +166,25 @@ for idx, training_folder in enumerate(training_dataset.keys()):
     all_features[idx, 1656:1659] = first_region_surface, second_region_surface, third_region_surface
     all_features[idx, 1659:1662] = first_region_roundness, second_region_roundness, third_region_roundness
 
-sel = VarianceThreshold(threshold=(.5 * (1 - .5)))
-selected_all_features = sel.fit_transform(all_features)
-
-scaler = StandardScaler()
-normalized_selected_all_features = scaler.fit_transform(selected_all_features)
-
 X = all_features
 y = mRS_gt
-print(X.shape, y.shape)
 
+# Leave One Out Cross Validation
 loo = LeaveOneOut()
-estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
-#rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
-#X_rfecv = rfecv.fit_transform(X, y)
-X_rfecv = X
 
 y_pred_label = np.zeros((37,1), dtype=np.float32)
 accuracy = np.zeros((37,1), dtype=np.float32)
 y_abs_error = np.zeros((37,1), dtype=np.float32)
 
-for train_index, test_index in loo.split(X_rfecv):
-    X_train, X_test = X_rfecv[train_index], X_rfecv[test_index]
+for train_index, test_index in loo.split(X):
+    X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
     estimator = RandomForestRegressor(n_estimators=200, random_state=1989, n_jobs=-1)
     estimator.fit(X_train, y_train)
     y_pred = estimator.predict(X_test)
     y_pred_label[idx] = np.round(y_pred)
-    accuracy[idx] = accuracy_score(np.round(y_pred), y_test)
+    print(y_pred)
+    accuracy[idx] = accuracy_score(y_pred_label[idx], y_test)
     y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
 
 np.save('./oskar_ISLES2016.npy', y_pred_label)
