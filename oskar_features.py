@@ -13,7 +13,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold, RFECV
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
-
+from sortedcontainers import SortedDict
 
 def get_train_dataset(isles2017_dir, isles2017_training_dir):    
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
@@ -102,7 +102,11 @@ mRS_gt = np.zeros((37,))
 
 all_features = np.zeros((37, 1662))
 
-for idx, training_folder in enumerate(training_dataset.keys()):
+train_dataset_keys = training_dataset.keys()
+
+sorted_train_dataset_keys = sorted(train_dataset_keys, key=lambda x:int(x[9:]))
+
+for idx, training_folder in enumerate(sorted_train_dataset_keys):
     # adc direction    
     adc_temp = [os.path.join(root, name) for root, dirs, files in os.walk(os.path.join(isles2017_training_dir,training_folder))
     for name in files if 'ADC' in name and 'MNI' not in name and name.endswith('.nii')]
