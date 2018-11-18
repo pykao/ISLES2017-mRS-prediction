@@ -42,6 +42,7 @@ def plot_confusion_matrix(cm, classes,
     plt.show()
 
 mRS = extract_gt_mRS()
+
 #volumetric_pred = np.load('./rfr_loo/rfr_volumetric_pred_loo.npy')
 #spatial_pred = np.load('./rfr_loo/rfr_spatial_pred_loo.npy')
 #morphological_pred = np.load('./rfr_loo/rfr_morphological_pred_loo.npy')
@@ -58,24 +59,22 @@ aal_pred = np.load('./rfr_loo/rfr_aal_pred_loo.npy')
 aal_ori_pred = np.load('./rfr_loo/rfr_aal_ori_pred_loo.npy')
 aal_Wdsi_end_roi_pred = np.load('./rfr_loo/rfr_aal_Wdsi_end_roi_pred_loo.npy')
 oskar_isles2016_pred = np.load('./rfr_loo/rfr_oskar_pred_loo.npy')
-
 y = mRS.reshape((37,1))
 
-
 tractographic_ae = np.absolute(y-aal_Wdsi_end_roi_pred)
-#volumetric_ae = np.absolute(y-volumetric_pred)
-#spatial_ae = np.absolute(y-spatial_pred)
+volumetric_ae = np.absolute(y-volumetric_pred)
+spatial_ae = np.absolute(y-spatial_pred)
 morphological_ae = np.absolute(y-morphological_pred)
-#HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
-#aal_ae = np.absolute(y-aal_pred)
-#aal_ori_ae = np.absolute(y-aal_ori_pred)
+HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
+aal_ae = np.absolute(y-aal_pred)
+aal_ori_ae = np.absolute(y-aal_ori_pred)
 oskar_ae = np.absolute(y-oskar_isles2016_pred)
 print(stats.ttest_rel(tractographic_ae, oskar_ae))
 #print(np.median(HarvardOxfordCort_ae))
 
 # confusion_matrix(y_true, y_pred)
-cnf_matrix_volume = confusion_matrix(mRS, oskar_isles2016_pred)
-np.set_printoptions(precision=2)
-plt.figure()
-plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
-                      title='Confusion matrix(Oskar ISLES2016)')
+#cnf_matrix_volume = confusion_matrix(y, oskar_isles2016_pred)
+#np.set_printoptions(precision=2)
+#plt.figure()
+#plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
+#                      title='Confusion matrix(Oskar ISLES2016)')

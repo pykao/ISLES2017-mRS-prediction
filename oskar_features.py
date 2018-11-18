@@ -107,6 +107,7 @@ train_dataset_keys = training_dataset.keys()
 sorted_train_dataset_keys = sorted(train_dataset_keys, key=lambda x:int(x[9:]))
 
 for idx, training_folder in enumerate(sorted_train_dataset_keys):
+    print(training_folder)
     # adc direction    
     adc_temp = [os.path.join(root, name) for root, dirs, files in os.walk(os.path.join(isles2017_training_dir,training_folder))
     for name in files if 'ADC' in name and 'MNI' not in name and name.endswith('.nii')]
