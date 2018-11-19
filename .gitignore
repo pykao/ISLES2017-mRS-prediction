@@ -9,3 +9,5 @@ rfr*
 *.nii.gz
 *.pyc
 test.py
+dca*
+rfecv*

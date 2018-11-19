@@ -69,7 +69,7 @@ HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
 aal_ae = np.absolute(y-aal_pred)
 aal_ori_ae = np.absolute(y-aal_ori_pred)
 oskar_ae = np.absolute(y-oskar_isles2016_pred)
-print(stats.ttest_rel(tractographic_ae, oskar_ae))
+print(stats.ttest_rel(tractographic_ae, morphological_ae))
 #print(np.median(HarvardOxfordCort_ae))
 
 # confusion_matrix(y_true, y_pred)

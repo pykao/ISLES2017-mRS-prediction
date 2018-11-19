@@ -65,11 +65,16 @@ morphological_features, morphological_list = extract_morphological_features()
 #region_type='roi'
 #logging.info(region_type)
 #W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type)
+#np.save('./W_dsi_pass.npy', W_dsi_pass)
+#np.save('./W_nrm_pass.npy', W_nrm_pass)
+#np.save('./W_bin_pass.npy', W_bin_pass)
+#np.save('./W_dsi_end.npy', W_dsi_end)
+#np.save('./W_nrm_end.npy', W_nrm_end)
+#np.save('./W_bin_end.npy', W_nrm_end)
 
+#exit()
 
 logging.info('Completed feature extraction...')
-
-
 
 # ==============================  Feature Normalization ========================================= #
 logging.info('Features normalization...')
@@ -331,4 +336,5 @@ for i in np.arange(6):
         y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
         idx += 1
     logging.info("Best Scores of features - Using Random Forest Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
-    '''
+
+'''
