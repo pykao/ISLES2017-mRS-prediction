@@ -172,11 +172,11 @@ def extract_morphological_features():
         morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_surface, stroke_regions[0].solidity, stroke_roundness
     return morphological_features, morphological_list
 
-def extract_tractographic_features(region_type='roi'):
+def extract_tractographic_features(region_type='roi', number_tracts = 1000000):
     # The ground truth lesion in subject space
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     # The connectivity matrices location 
-    connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', region_type, 'gt_stroke')
+    connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', region_type, 'gt_stroke', str(number_tracts))
     # pass type locations
     connectivity_pass_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'pass' in name and name.endswith('.mat')]
     connectivity_pass_files.sort()
