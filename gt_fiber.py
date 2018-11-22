@@ -49,7 +49,29 @@ source ='HCP1021.1mm.fib.gz'
 
 assert (os.path.exists(os.path.join(work_dir, source))), 'HCP1021 template is not in the dsi studio directory'
 
-parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01dcba'
+# 2,000,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4380841Eca01cb01d'
+
+# 1,000,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01dcba'
+
+# 500,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4320A107ca01cb01d'
+
+# 250,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4390Da3ca01cb01d'
+
+# 125,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4348E801ca01cb01d'
+
+# 62,500 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4324F4cb01cb01d'
+
+# 31,250 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA43127Acb01cb01d'
+
+# 15,626 tracts
+parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA43093Dcb01cb01d'
 
 os.chdir(work_dir)
 
@@ -58,7 +80,7 @@ stroke_files_dir = os.listdir(dst_dir)
 stroke_files_dir.sort()
 assert(len(stroke_files_dir)==43)
 
-region_prop ='--roa='
+region_prop ='--roi='
 
 # pass type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
