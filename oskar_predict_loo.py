@@ -29,7 +29,9 @@ loo = LeaveOneOut()
 #rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
 #X = rfecv.fit_transform(normalized_selected_all_features, y)
 X = normalized_selected_all_features
+X = all_features
 
+print(X.shape)
 
 y_pred_label = np.zeros((37,1), dtype=np.float32)
 y_abs_error = np.zeros((37,1), dtype=np.float32)
@@ -47,6 +49,6 @@ for train_index, test_index in loo.split(X):
 
 accouracy = accuracy_score(y, y_pred_label)
 
-#np.save('./rfr_oskarISLES2016.npy', y_pred_label)
+np.save('./rfr_oskarISLES2016_wofs.npy', y_pred_label)
 
 print("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(accouracy, np.mean(y_abs_error), np.std(y_abs_error)))

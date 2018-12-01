@@ -49,11 +49,31 @@ source ='HCP1021.1mm.fib.gz'
 
 assert (os.path.exists(os.path.join(work_dir, source))), 'HCP1021 template is not in the dsi studio directory'
 
+# Smoothing = 0.1
+# 1,000,000 tracts
+parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3FCDCCCC3Db404b0FA4340420Fca01cb01d'
+
+# Smoothing = 0.2
+# 1,000,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3FCDCC4C3Eb404b0FA4340420Fca01cb01d'
+
+# Smoothing = 0.3
+# 1,000,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3F9A99993Eb404b0FA4340420Fca01cb01d'
+
+# Smoothing = 0.4
+# 1,000,000 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3FCDCCCC3Eb404b0FA4340420Fca01cb01d'
+
+# Smoothing = 0.5
 # 2,000,000 tracts
 #parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4380841Eca01cb01d'
 
 # 1,000,000 tracts
+# tip = 0
 #parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01dcba'
+# tip = 1
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01cb01d'
 
 # 500,000 tracts
 #parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4320A107ca01cb01d'
@@ -70,8 +90,8 @@ assert (os.path.exists(os.path.join(work_dir, source))), 'HCP1021 template is no
 # 31,250 tracts
 #parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA43127Acb01cb01d'
 
-# 15,626 tracts
-parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA43093Dcb01cb01d'
+# 15,625 tracts
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA43093Dcb01cb01d'
 
 os.chdir(work_dir)
 
@@ -81,6 +101,7 @@ stroke_files_dir.sort()
 assert(len(stroke_files_dir)==43)
 
 region_prop ='--roi='
+#region_prop ='--roa='
 
 # pass type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
@@ -106,6 +127,7 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     connectivity_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'connectivity' in name and name.endswith('.mat')]
     connectivity_file_dst = os.path.join(os.path.split(connectivity_files[0])[0], 'connectivity', 'gt_stroke', os.path.split(connectivity_files[0].replace(source, pat_name))[1])
     shutil.move(connectivity_files[0], connectivity_file_dst)
+    print('---'*20)
 
 # end type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
@@ -131,3 +153,4 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     connectivity_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'connectivity' in name and name.endswith('.mat')]
     connectivity_file_dst = os.path.join(os.path.split(connectivity_files[0])[0], 'connectivity', 'gt_stroke', os.path.split(connectivity_files[0].replace(source, pat_name))[1])
     shutil.move(connectivity_files[0], connectivity_file_dst)
+    print('---'*20)

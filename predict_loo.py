@@ -23,7 +23,7 @@ from utils import extract_volumetric_spatial_features, extract_morphological_fea
 from xgboost import XGBRegressor
 
 # =========================================== setup logs ====================================== #
-log = os.path.join(os.getcwd(), 'log_loo.txt')
+log = os.path.join(os.getcwd(), 'log_paper.txt')
 fmt = '%(asctime)s %(message)s'
 logging.basicConfig(level=logging.INFO, format=fmt, filename=log)
 console = logging.StreamHandler()
@@ -46,36 +46,33 @@ mRS_gt = extract_gt_mRS()
 #logging.info('Extracting morphological features...')
 #morphological_features, morphological_list = extract_morphological_features()
 
-
-#logging.info('Extracting volumetric and spatial features...')
+logging.info('Extracting volumetric and spatial features...')
 #atlas_name = 'HarvardOxfordSub'
 #atlas_name = 'HarvardOxfordCort'
-#atlas_name = 'aal'
+atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
-#volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
+volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
 # original atlas
-#volumetric_spatial_features = volumetric_spatial_features[:, 1:]
-#del volumetric_spatial_list[0]
+volumetric_spatial_features = volumetric_spatial_features[:, 1:]
+del volumetric_spatial_list[0]
 #print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
 
-logging.info('Extracting tractographic features...')
-region_type='roi'
-number_tracts = 31250
-logging.info('Type of region: %s' %region_type)
-logging.info('Number of tracts: %d' %number_tracts)
+#logging.info('Extracting tractographic features...')
+#region_type='roi'
+#number_tracts = '1000000'
+#logging.info('Type of region: %s' %region_type)
+#logging.info('Number of tracts: %s' %number_tracts)
 
-W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type, number_tracts)
+#W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type, number_tracts)
 #np.save('./W_dsi_pass.npy', W_dsi_pass)
 #np.save('./W_nrm_pass.npy', W_nrm_pass)
 #np.save('./W_bin_pass.npy', W_bin_pass)
 #np.save('./W_dsi_end.npy', W_dsi_end)
 #np.save('./W_nrm_end.npy', W_nrm_end)
 #np.save('./W_bin_end.npy', W_nrm_end)
-
-
 
 logging.info('Completed feature extraction...')
 
@@ -160,6 +157,7 @@ logging.info('Completed feature extraction...')
 ##X = selected_normalized_W_dsi_pass_histogram_features
 ##X = selected_normalized_W_nrm_pass
 ##feature_list = selected_W_nrm_pass_list
+
 #X = selected_normalized_W_bin_pass
 #feature_list = selected_W_bin_pass_list
 
@@ -169,6 +167,20 @@ logging.info('Completed feature extraction...')
 ##X = selected_normalized_W_nrm_end_histogram_features
 #X = selected_normalized_W_bin_end
 #feature_list = selected_W_bin_end_list
+
+
+
+
+# ============================== Using Original Features (without feature selections) ===================== #
+
+logging.info('Using Original Tractographic Features')
+
+#X, feature_list = morphological_features, morphological_list
+
+X, feature_list = volumetric_spatial_features, volumetric_spatial_list
+
+#X, feature_list = W_bin_pass, tract_list
+
 
 # ========================================== RFECV feature selection ====================================== #
 
@@ -207,7 +219,7 @@ logging.info('Completed feature extraction...')
 #X_rfecv = rfecv_all_features
 #print(rfecv_all_features.shape, len(rfecv_feature_list))
 
-'''
+
 # =============================================== Start Prediction ========================================= #
 
 y = mRS_gt
@@ -221,21 +233,23 @@ y_abs_error = np.zeros((37,1), dtype=np.float32)
 ##y_pred_proba = np.zeros((37,5), dtype=np.float32)
 
 # ======================== Volumetric, Spatial, Morphological, Volumetric Spatial Features ================= #
+# ======================== RFECV =========================================================================== #
 #estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
-#estimator = RandomForestRegressor(n_estimators=300, random_state=1989, n_jobs=-1)
-estimator = RandomForestClassifier(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1, class_weight="balanced")
-logging.info('RFECV Feature selection...')
-# rfecv 
+##estimator = RandomForestRegressor(n_estimators=300, random_state=1989, n_jobs=-1)
+##estimator = RandomForestClassifier(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1, class_weight="balanced")
+#logging.info('RFECV Feature selection...')
 ##rfecv = RFECV(estimator, step=1, cv=rskf, scoring='neg_mean_absolute_error', n_jobs=-1)
 ##rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_squared_error', n_jobs=-1)
-rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
-X_rfecv = rfecv.fit_transform(X, y)
-logging.info('Random Froest Classifier, Optimal number of features: %d' % X_rfecv.shape[1])
+#rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
+#X_rfecv = rfecv.fit_transform(X, y)
+##logging.info('Random Froest Classifier, Optimal number of features: %d' % X_rfecv.shape[1])
 #logging.info('Random Froest Regressor, Optimal number of features: %d' % X_rfecv.shape[1])
-rfecv_feature_list = [name for idx, name in enumerate(feature_list) if rfecv.get_support()[idx]]
+#rfecv_feature_list = [name for idx, name in enumerate(feature_list) if rfecv.get_support()[idx]]
 
-##X_rfecv=X
-##rfecv_feature_list = feature_list
+X_rfecv=X
+rfecv_feature_list = feature_list
+logging.info('Random Froest Classifier, Optimal number of features: %d' % X_rfecv.shape[1])
+
 
 subject_feature_importances = np.zeros((37,len(rfecv_feature_list)), dtype=np.float32)
 
@@ -245,10 +259,10 @@ for train_index, test_index in loo.split(X_rfecv):
     X_train, X_test = X_rfecv[train_index], X_rfecv[test_index]
     y_train, y_test = y[train_index], y[test_index]
     # RF Regression
-    #estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
+    estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
     #estimator = RandomForestRegressor(n_estimators=300, random_state=1989, n_jobs=-1)    
     # RF Classifier with balanced weights
-    estimator = RandomForestClassifier(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1, class_weight="balanced")
+    #estimator = RandomForestClassifier(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1, class_weight="balanced")
     estimator.fit(X_train, y_train)
     subject_importance = estimator.feature_importances_
     subject_feature_importances[idx,:] = subject_importance
@@ -258,20 +272,20 @@ for train_index, test_index in loo.split(X_rfecv):
     y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
     idx += 1
 
-logging.info("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
-#logging.info("Best Scores of features  - Using RF Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
+#logging.info("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
+logging.info("Best Scores of features  - Using RF Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
 
-#np.save('./rfc_volumetric_pred_loo.npy', y_pred_label) 
-#np.save('./rfc_spatial_pred_loo.npy', y_pred_label)
-np.save('./rfc_morphological_pred_loo.npy', y_pred_label)
-#np.save('./rfc_HarvardOxfordSub_pred_loo.npy', y_pred_label)
+#np.save('./rfr_volumetric_pred_loo.npy', y_pred_label) 
+#np.save('./rfr_spatial_pred_loo.npy', y_pred_label)
+#np.save('./rfr_morphological_pred_loo_wofs.npy', y_pred_label)
+#np.save('./rfr_HarvardOxfordSub_pred_loo.npy', y_pred_label)
 #np.save('./rfr_HarvardOxfordCort_ori_pred_loo.npy', y_pred_label)
-#np.save('./rfc_aal_ori_pred_loo.npy', y_pred_label)
-#np.save('./rfc_JHU_pred_loo.npy', y_pred_label)
-#np.save('./rfc_MNI_pred_loo.npy', y_pred_label)
-#np.save('./rfc_OASIS_pred_loo.npy', y_pred_label)
-#np.save('./rfc_aal_Wbin_pass_roi_pred_loo.npy', y_pred_label)
-#np.save('./rfc_aal_Wdsi_end_roi_pred_loo.npy', y_pred_label)
+np.save('./rfc_aal_ori_pred_loo_wofs.npy', y_pred_label)
+#np.save('./rfr_JHU_pred_loo.npy', y_pred_label)
+#np.save('./rfr_MNI_pred_loo.npy', y_pred_label)
+#np.save('./rfr_OASIS_pred_loo.npy', y_pred_label)
+#np.save('./rfr_aal_Wbin_pass_roi_pred_loo.npy', y_pred_label)
+#np.save('./rfr_aal_Wdsi_end_roi_pred_loo_wofs.npy', y_pred_label)
 
 
 importances = np.round(np.mean(subject_feature_importances, axis=0),decimals=2) 
@@ -280,10 +294,10 @@ feature_importances = [(feature, round(importance, 2)) for feature, importance i
 feature_importances = sorted(feature_importances, key = lambda x: x[1], reverse = True)
 # Print out the feature and importances 
 [logging.info('Variable: {:30} Importance: {}'.format(*pair)) for pair in feature_importances]
-'''
 
 
-# ================================= Tractographic Features =================================================== #
+
+'''# ================================= Tractographic Features =================================================== #
 
 tractographic_feature_list = ['W_dis_pass', 'W_nrm_pass', 'W_bin_pass', 'W_dsi_end', 'W_nrm_end', 'W_bin_end']
 
@@ -340,3 +354,4 @@ for i in np.arange(6):
         y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
         idx += 1
     logging.info("Best Scores of features - Using Random Forest Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
+'''
