@@ -37,6 +37,8 @@ mRS_gt = extract_gt_mRS()
 
 # ======================================== Feature Extraction ================================= #
 
+logging.info('Feature extraction...')
+
 #logging.info('Extracting volumetric features...')
 #volumetric_features, volumetric_list = extract_volumetric_features()
 
@@ -46,27 +48,27 @@ mRS_gt = extract_gt_mRS()
 #logging.info('Extracting morphological features...')
 #morphological_features, morphological_list = extract_morphological_features()
 
-logging.info('Extracting volumetric and spatial features...')
+#logging.info('Extracting volumetric and spatial features...')
 #atlas_name = 'HarvardOxfordSub'
 #atlas_name = 'HarvardOxfordCort'
-atlas_name = 'aal'
+#atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
-volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
+#volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
 # original atlas
-volumetric_spatial_features = volumetric_spatial_features[:, 1:]
-del volumetric_spatial_list[0]
-#print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
+#volumetric_spatial_features = volumetric_spatial_features[:, 1:]
+#del volumetric_spatial_list[0]
+##print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
 
-#logging.info('Extracting tractographic features...')
-#region_type='roi'
-#number_tracts = '1000000'
-#logging.info('Type of region: %s' %region_type)
-#logging.info('Number of tracts: %s' %number_tracts)
+logging.info('Extracting tractographic features...')
+region_type='roi'
+number_tracts = 'smoothing40tracts1000000'
+logging.info('Type of region: %s' %region_type)
+logging.info('Number of tracts: %s' %number_tracts)
 
-#W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type, number_tracts)
+W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type, number_tracts)
 #np.save('./W_dsi_pass.npy', W_dsi_pass)
 #np.save('./W_nrm_pass.npy', W_nrm_pass)
 #np.save('./W_bin_pass.npy', W_bin_pass)
@@ -173,16 +175,16 @@ logging.info('Completed feature extraction...')
 
 # ============================== Using Original Features (without feature selections) ===================== #
 
-logging.info('Using Original Tractographic Features')
+#logging.info('Using Original Tractographic Features')
 
 #X, feature_list = morphological_features, morphological_list
 
-X, feature_list = volumetric_spatial_features, volumetric_spatial_list
+#X, feature_list = volumetric_spatial_features, volumetric_spatial_list
 
 #X, feature_list = W_bin_pass, tract_list
 
 
-# ========================================== RFECV feature selection ====================================== #
+# ========================================== Using RFECV feature selection ====================================== #
 
 # Cross Validation Model
 #loo = LeaveOneOut()
@@ -220,7 +222,7 @@ X, feature_list = volumetric_spatial_features, volumetric_spatial_list
 #print(rfecv_all_features.shape, len(rfecv_feature_list))
 
 
-# =============================================== Start Prediction ========================================= #
+'''# =============================================== Start Prediction ========================================= #
 
 y = mRS_gt
 
@@ -294,10 +296,10 @@ feature_importances = [(feature, round(importance, 2)) for feature, importance i
 feature_importances = sorted(feature_importances, key = lambda x: x[1], reverse = True)
 # Print out the feature and importances 
 [logging.info('Variable: {:30} Importance: {}'.format(*pair)) for pair in feature_importances]
+'''
 
 
-
-'''# ================================= Tractographic Features =================================================== #
+# ================================= Tractographic Features =================================================== #
 
 tractographic_feature_list = ['W_dis_pass', 'W_nrm_pass', 'W_bin_pass', 'W_dsi_end', 'W_nrm_end', 'W_bin_end']
 
@@ -354,4 +356,3 @@ for i in np.arange(6):
         y_abs_error[idx] = np.absolute(y_pred_label[idx]-y_test)
         idx += 1
     logging.info("Best Scores of features - Using Random Forest Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
-'''
