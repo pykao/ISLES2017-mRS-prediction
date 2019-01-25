@@ -16,31 +16,33 @@ For fiber tracking and building connectivity matrix, you need to download [DSI S
 
 ## How to run the codes
 
-### 1. Change the paths.py
+### 1. Change the pathes inside paths.py
 
-set `isles2017_dir` to the path you save the clinical parameters .csv file
+set `isles2017_dir` to the path you store the clinical parameters file (ISLES2017_Training.csv)
 
-set `isles2017_training_dir` to the path you save ISLES2017 training data
+set `isles2017_training_dir` to the path you save ISLES2017 training data (ISLES2017/train)
 
 set `mni152_1mm_path` to the path store the MNI152_T1_1mm_brain.nii.gz
 
 set `dsi_studio_path` to the dsistudio directory
 
-### 2. registerBrain.py
+### 2. Run registerBrain.py
 
-This script registers the MR adc images from subject space to MNI152 1mm space and registers the brain lesions to MNI 152 1mm space
+This script registers the MR-ADC image and the brain lesion from the subject space to MNI152 1mm space.
 
-### 3. gt_fiber.py
+The outputs: 
 
-This script generates the fiber tracts for the subject
+ADC_MNI152_1mm.nii.gz, ADC_MNI152_1mm_invol2refvol.mat, and ADC_MNI152_1mm_refvol2invol.mat under ADC's directory
 
-You are able to change the region properties on line #61
+OT_MNI152_1mm.nii.gz and OT_prob_MNI152_T1_1mm.nii.gz under brain lesion's directory  
 
-`--seed=`: create tract seed inside the lesion 
+### 3. Run gt_fiber.py
 
-`--roi=`: seed in the whole brain region and find the fiber tracts pass through the lesion region
+This script generates the fiber tracts for the subject. 
 
-`--roa=`: seed in the whole brain region and find the fiber tracts avoid the lesion region 
+We seed in the whole brain region and find the fiber tracts pass through the lesion region
+
+
 
 ## 4. predict_loo.py
 

@@ -5,22 +5,26 @@ import csv
 import paths
 
 def MoveLesionsMNIMask(isles_train_path, dst_dir):
-	lesion_mni_path = [os.path.join(root, name) for root, dirs, files in os.walk(isles_train_path) for name in files if 'MNI152_T1_1mm' in name and 'prob' not in name and name.endswith('nii.gz')]
-	for src in lesion_mni_path:
-		lesion = os.path.split(src)[1]
-		print(lesion)
-		dst = os.path.join(dst_dir, lesion)
-		shutil.copy(src, dst)
+    '''Move lesion in MNI251 space from isles_train_path to dst_dir'''
+    lesion_mni_path = [os.path.join(root, name) for root, dirs, files in os.walk(isles_train_path) for name in files if 'MNI152_T1_1mm' in name and 'prob' not in name and name.endswith('nii.gz')]
+    for src in lesion_mni_path:
+        lesion = os.path.split(src)[1]
+        print(lesion)
+        dst = os.path.join(dst_dir, lesion)
+        shutil.copy(src, dst)
 
+# Change the working directory to dsistudio 
 work_dir = paths.dsi_studio_path
 
+# create a folder called gt_stroke to store all stroke lesion in MNI152 space
 dst_dir = os.path.join(work_dir, 'gt_stroke')
-
 if not os.path.exists(dst_dir):
     os.mkdir(dst_dir)
+# move the strokes in MNI space to gt_stroke directory
+if not os.listdir(dst_dir):
+    MoveLesionsMNIMask(paths.isles2017_training_dir, dst_dir)
 
-#MoveLesionsMNIMask(paths.isles2017_training_dir, dst_dir)
-
+# create a folder to save network measures
 network_measures_dir = os.path.join(work_dir, 'network_measures')
 
 if not os.path.exists(network_measures_dir):
@@ -29,6 +33,8 @@ if not os.path.exists(network_measures_dir):
 if not os.path.exists(os.path.join(network_measures_dir, 'gt_stroke')):
     os.mkdir(os.path.join(network_measures_dir, 'gt_stroke'))
 
+
+# create a folder to save connectogram
 connectogram_dir = os.path.join(work_dir, 'connectogram')
 
 if not os.path.exists(connectogram_dir):
@@ -37,6 +43,7 @@ if not os.path.exists(connectogram_dir):
 if not os.path.exists(os.path.join(connectogram_dir, 'gt_stroke')):
     os.mkdir(os.path.join(connectogram_dir, 'gt_stroke'))
 
+# create a folder to save connectivity matrix
 connectivity_dir = os.path.join(work_dir, 'connectivity')
 
 if not os.path.exists(connectivity_dir):
@@ -45,62 +52,26 @@ if not os.path.exists(connectivity_dir):
 if not os.path.exists(os.path.join(connectivity_dir, 'gt_stroke')):
     os.mkdir(os.path.join(connectivity_dir, 'gt_stroke'))
 
+# The average fiber tracts from 1021 HCP subjects
 source ='HCP1021.1mm.fib.gz'
 
 assert (os.path.exists(os.path.join(work_dir, source))), 'HCP1021 template is not in the dsi studio directory'
 
-# Smoothing = 0.1
-# 1,000,000 tracts
-parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3FCDCCCC3Db404b0FA4340420Fca01cb01d'
-
-# Smoothing = 0.2
-# 1,000,000 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3FCDCC4C3Eb404b0FA4340420Fca01cb01d'
-
-# Smoothing = 0.3
-# 1,000,000 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3F9A99993Eb404b0FA4340420Fca01cb01d'
-
-# Smoothing = 0.4
-# 1,000,000 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3FCDCCCC3Eb404b0FA4340420Fca01cb01d'
-
-# Smoothing = 0.5
-# 2,000,000 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4380841Eca01cb01d'
-
-# 1,000,000 tracts
-# tip = 0
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01dcba'
-# tip = 1
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01cb01d'
-
-# 500,000 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4320A107ca01cb01d'
-
-# 250,000 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4390Da3ca01cb01d'
-
-# 125,000 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4348E801ca01cb01d'
-
-# 62,500 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4324F4cb01cb01d'
-
-# 31,250 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA43127Acb01cb01d'
-
-# 15,625 tracts
-#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA43093Dcb01cb01d'
+# tracking parameter
+parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01cb01d'
 
 os.chdir(work_dir)
 
+# list all stroke files
 stroke_dir = dst_dir
 stroke_files_dir = os.listdir(dst_dir)
 stroke_files_dir.sort()
 assert(len(stroke_files_dir)==43)
 
+
+# region property
 region_prop ='--roi='
+#region_prop = '--seed='
 #region_prop ='--roa='
 
 # pass type of connectivity matrices
@@ -108,12 +79,9 @@ for idx, stroke_file in enumerate(stroke_files_dir):
 
     pat_name = stroke_file[:stroke_file.find('_MNI152_T1_1mm.nii.gz')]
     print(idx, pat_name)
-    #roi = '--roi='+os.path.join(stroke_dir, stroke_file)
-    #seed = '--seed='+os.path.join(stroke_dir, stroke_file)
     connectivity_type = '--connectivity_type=pass'
     connectivity_value = '--connectivity_value=count'
     connectivity_threshold = '--connectivity_threshold=0'
-    #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, seed, roi, parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
     subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
     network_measure_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'network_measures' in name and name.endswith('.txt')]
@@ -134,12 +102,9 @@ for idx, stroke_file in enumerate(stroke_files_dir):
 
     pat_name = stroke_file[:stroke_file.find('_MNI152_T1_1mm.nii.gz')]
     print(idx, pat_name)
-    #roi = '--roi='+os.path.join(stroke_dir, stroke_file)
-    #seed = '--seed='+os.path.join(stroke_dir, stroke_file)
     connectivity_type = '--connectivity_type=end'
     connectivity_value = '--connectivity_value=count'
     connectivity_threshold = '--connectivity_threshold=0'
-    #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, seed, roi, parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
     subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
     network_measure_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'network_measures' in name and name.endswith('.txt')]
