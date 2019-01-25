@@ -1,8 +1,20 @@
 # Prediction of Modified Rankin Scale (mRS) in Stroke Patients with Tractographic Features
 
-## How to run the codes
+## Dataset
 
-These codes are wrote in Python 3.6
+[ISLES 2017](http://www.isles-challenge.org/ISLES2017/)
+
+## Dependencies
+
+Python 3.6
+
+## Required Softwares
+
+For image registration, you need to download [FSL].(https://fsl.fmrib.ox.ac.uk/fsl/fslwiki)
+
+For fiber tracking and building connectivity matrix, you need to download [DSI Studio](http://dsi-studio.labsolver.org/)
+
+## How to run the codes
 
 ### 1. Change the paths.py
 
