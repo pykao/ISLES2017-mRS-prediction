@@ -49,27 +49,28 @@ logging.info('Feature extraction...')
 #logging.info('Extracting morphological features...')
 #morphological_features, morphological_list = extract_morphological_features()
 
-#logging.info('Extracting volumetric and spatial features...')
+logging.info('Extracting volumetric and spatial features...')
 #atlas_name = 'HarvardOxfordSub'
 #atlas_name = 'HarvardOxfordCort'
-#atlas_name = 'aal'
+atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
-#volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
+volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
-# original atlas
-#volumetric_spatial_features = volumetric_spatial_features[:, 1:]
-#del volumetric_spatial_list[0]
-##print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
+# original feature
+logging.info('Using original volumetric-spatial feature...')
+volumetric_spatial_features = volumetric_spatial_features[:, 1:]
+del volumetric_spatial_list[0]
+print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
 
-logging.info('Extracting tractographic features...')
-region_type='roi'
-number_tracts = '1000000'
-logging.info('Type of region: %s' %region_type)
-logging.info('Number of tracts: %s' %number_tracts)
+#logging.info('Extracting tractographic features...')
+#region_type='roi'
+#number_tracts = '1000000'
+#logging.info('Type of region: %s' %region_type)
+#logging.info('Number of tracts: %s' %number_tracts)
 
-W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type, number_tracts)
+#W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type, number_tracts)
 #np.save('./W_dsi_pass.npy', W_dsi_pass)
 #np.save('./W_nrm_pass.npy', W_nrm_pass)
 #np.save('./W_bin_pass.npy', W_bin_pass)
@@ -80,8 +81,8 @@ W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list 
 logging.info('Completed feature extraction...')
 
 # ==============================  Feature Normalization ========================================= #
-#logging.info('Features normalization...')
-#scaler = StandardScaler()
+logging.info('Features normalization...')
+scaler = StandardScaler()
 
 #normalized_volumetric_features = scaler.fit_transform(volumetric_features)
 
@@ -89,7 +90,7 @@ logging.info('Completed feature extraction...')
 
 #normalized_morphological_features = scaler.fit_transform(morphological_features)
 
-#normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
+normalized_volumetric_spatial_features =scaler.fit_transform(volumetric_spatial_features)
 
 ##normalized_W_dsi_pass_histogram_features = scaler.fit_transform(W_dsi_pass)
 ##normalized_W_nrm_pass = scaler.fit_transform(W_nrm_pass)
@@ -102,14 +103,14 @@ logging.info('Completed feature extraction...')
 
 #normalized_W_bin_end = scaler.fit_transform(W_bin_end)
 
-#logging.info('Completed features normalization...')
+logging.info('Completed features normalization...')
 
 # ======================================== Remove features with all zeros ======================= # 
 
 # Perforamce Feature Selection
 # Remove features with all zeros
-#logging.info('Remove features with all zeros...')
-#sel = VarianceThreshold(0)
+logging.info('Remove features with all zeros...')
+sel = VarianceThreshold(0)
 
 #selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 #selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
@@ -120,8 +121,8 @@ logging.info('Completed feature extraction...')
 #selected_normalized_morphological_features = sel.fit_transform(normalized_morphological_features)
 #selected_morphological_list = [name for idx, name in enumerate(morphological_list) if sel.get_support()[idx]]
 
-#selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
-#selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
+selected_normalized_volumetric_spatial_features = sel.fit_transform(normalized_volumetric_spatial_features)
+selected_volumetric_spatial_list = [name for idx, name in enumerate(volumetric_spatial_list) if sel.get_support()[idx]]
 
 ##selected_normalized_W_dsi_pass_histogram_features = sel.fit_transform(normalized_W_dsi_pass_histogram_features)
 ##selected_normalized_W_nrm_pass = sel.fit_transform(normalized_W_nrm_pass)
@@ -138,6 +139,8 @@ logging.info('Completed feature extraction...')
 #selected_normalized_W_bin_end= sel.fit_transform(normalized_W_bin_end)
 #selected_W_bin_end_list = [name for idx, name in enumerate(tract_list) if sel.get_support()[idx]]
 
+logging.info('Completed removing feature with low variance')
+
 # ======================================= Select which feature to use ===================================== #
 
 #logging.info('Using volumetric features')
@@ -152,9 +155,9 @@ logging.info('Completed feature extraction...')
 #X = selected_normalized_morphological_features
 #feature_list = selected_morphological_list
 
-#logging.info('Using Volumetric and Spatial Features....')
-#X = selected_normalized_volumetric_spatial_features
-#feature_list = selected_volumetric_spatial_list
+logging.info('Using Volumetric and Spatial Features....')
+X = selected_normalized_volumetric_spatial_features
+feature_list = selected_volumetric_spatial_list
 
 #logging.info('Using Tractographic Features')
 ##X = selected_normalized_W_dsi_pass_histogram_features
@@ -182,7 +185,7 @@ logging.info('Completed feature extraction...')
 
 #X, feature_list = volumetric_spatial_features, volumetric_spatial_list
 
-X, feature_list = W_bin_pass, tract_list
+#X, feature_list = W_bin_pass, tract_list
 
 
 # ========================================== Feature fusion Using RFECV feature selection ====================================== #
@@ -252,7 +255,8 @@ y_abs_error = np.zeros((37,1), dtype=np.float32)
 ## original feature
 X_rfecv=X
 rfecv_feature_list = feature_list
-logging.info('Random Froest Classifier, Optimal number of features: %d' % X_rfecv.shape[1])
+logging.info('Using original feature without RFECV...')
+#logging.info('Random Froest Regressor, Optimal number of features: %d' % X_rfecv.shape[1])
 
 
 subject_feature_importances = np.zeros((37,len(rfecv_feature_list)), dtype=np.float32)
@@ -279,6 +283,7 @@ for train_index, test_index in loo.split(X_rfecv):
 #logging.info("Best Scores of features  - Using RF Classifier - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
 logging.info("Best Scores of features  - Using RF Regressor - Accuracy: %0.4f , MAE: %0.4f (+/- %0.4f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
 
+
 #np.save('./rfr_volumetric_pred_loo.npy', y_pred_label) 
 #np.save('./rfr_spatial_pred_loo.npy', y_pred_label)
 #np.save('./rfr_morphological_pred_loo_wofs.npy', y_pred_label)
@@ -292,20 +297,20 @@ logging.info("Best Scores of features  - Using RF Regressor - Accuracy: %0.4f , 
 #np.save('./rfr_aal_Wdsi_end_roi_pred_loo_wofs.npy', y_pred_label)
 
 # AAL top 5 features
-region_7_importances = subject_feature_importances[:,6]
-region_14_importances = subject_feature_importances[:,13]
-region_41_importances = subject_feature_importances[:,40]
-region_65_importances = subject_feature_importances[:,64]
-region_89_importances = subject_feature_importances[:,88]
-regions_importances = [region_89_importances, region_7_importances, region_65_importances, region_41_importances, region_14_importances]
-fig, ax = plt.subplots(1, 1)
-ax.boxplot(regions_importances, showmeans=True)
-ax.set_title('Region Importance', fontsize = 30)
-plt.ylabel('Importance', fontsize = 20)
-region_names = ['Left\ninferior temporal gyrus', 'Left\nmiddle frontal gyrus', 'Left\nangular gyrus', 'Left amygdala', 'Triangular part of\nright inferior frontal gyrus'] 
-plt.xticks(np.arange(1,6), region_names,  fontsize = 20)
-plt.yticks(fontsize = 20)
-plt.show()
+#region_7_importances = subject_feature_importances[:,6]
+#region_14_importances = subject_feature_importances[:,13]
+#region_41_importances = subject_feature_importances[:,40]
+#region_65_importances = subject_feature_importances[:,64]
+#region_89_importances = subject_feature_importances[:,88]
+#regions_importances = [region_89_importances, region_7_importances, region_65_importances, region_41_importances, region_14_importances]
+#fig, ax = plt.subplots(1, 1)
+#ax.boxplot(regions_importances, showmeans=True)
+#ax.set_title('Region Importance', fontsize = 30)
+#plt.ylabel('Importance', fontsize = 20)
+#region_names = ['Left\ninferior temporal gyrus', 'Left\nmiddle frontal gyrus', 'Left\nangular gyrus', 'Left amygdala', 'Triangular part of\nright inferior frontal gyrus'] 
+#plt.xticks(np.arange(1,6), region_names,  fontsize = 20)
+#plt.yticks(fontsize = 20)
+#plt.show()
 
 # AAL selected features
 #region_16_importances = subject_feature_importances[:,0]
