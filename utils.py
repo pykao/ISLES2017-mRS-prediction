@@ -13,14 +13,17 @@ def ReadImage(path):
     return sitk.GetArrayFromImage(sitk.ReadImage(path)).astype(np.float32)
 
 def find_list(subject_id, list):
+	''' this is used to find the stroke lesion for a subject name '''
     files = [file for file in list if subject_id in file]
     return files[0]
 
 def find_3d_surface(mask, voxel_spacing=(1.0,1.0,1.0)):
+	''' find the surface for a 3D object '''
 	verts, faces = marching_cubes_classic(volume=mask, spacing=voxel_spacing)
 	return mesh_surface_area(verts, faces)
 
 def find_3d_roundness(mask):
+	''' find the roundess of a 3D object '''
 	mask_region_props = regionprops(mask.astype(int))
 	mask_area = mask_region_props[0].area
 	mask_equivDiameter = (6.0*mask_area/math.pi)**(1.0/3.0)
@@ -28,6 +31,7 @@ def find_3d_roundness(mask):
 	return mask_equivDiameter**2/mask_major_axis_length**2
 
 def reshape_by_padding_upper_coords(image, new_shape, pad_value=None):
+	''' reshape the 3d matrix '''
     shape = tuple(list(image.shape))
     new_shape = tuple(np.max(np.concatenate((shape, new_shape)).reshape((2,len(shape))), axis=0))
     if pad_value is None:
