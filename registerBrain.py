@@ -60,6 +60,6 @@ omat_filepaths = ISLES2017TrainingInVol2RefVolPaths()
 
 pool = Pool(6)
 
-#pool.map(RegisterBrain, adc_filepaths)
+pool.map(RegisterBrain, adc_filepaths)
 
 pool.map(Lesions2MNI152_star, zip(gt_filepaths, omat_filepaths))
