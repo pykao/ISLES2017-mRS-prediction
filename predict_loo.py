@@ -2,6 +2,7 @@ import paths
 import csv
 import os
 import logging
+import argparse
 
 import SimpleITK as sitk
 import numpy as np
@@ -51,18 +52,27 @@ logging.info('Feature extraction...')
 
 logging.info('Extracting volumetric and spatial features...')
 #atlas_name = 'HarvardOxfordSub'
-#atlas_name = 'HarvardOxfordCort'
-atlas_name = 'aal'
+atlas_name = 'HarvardOxfordCort'
+#atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
 volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
+x_range = np.arange(volumetric_spatial_features.shape[1])
+lesion_histogram = volumetric_spatial_features.sum(axis=0)
+fig, ax = plt.subplots()
+plt.bar(x_range, lesion_histogram)
+plt.show()
+
+
+exit()
 # original feature
 logging.info('Using original volumetric-spatial feature...')
 volumetric_spatial_features = volumetric_spatial_features[:, 1:]
 del volumetric_spatial_list[0]
 print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
+
 
 #logging.info('Extracting tractographic features...')
 #region_type='roi'

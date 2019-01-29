@@ -42,7 +42,13 @@ This script generates the fiber tracts for the subject.
 
 We seed in the whole brain region and find the fiber tracts pass through the lesion region
 
+The outputs:
 
+end-type connectivity matrix and pass-type connectivity matrix
+
+end-type connectogram and pass-type connectogram
+
+end-type network measures and pass-type network measures
 
 ## 4. predict_loo.py
 

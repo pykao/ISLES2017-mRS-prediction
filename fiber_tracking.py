@@ -3,13 +3,15 @@ import shutil
 import subprocess
 import csv
 import paths
+from utils import ReadImage
+import numpy as np
 
 def MoveLesionsMNIMask(isles_train_path, dst_dir):
     '''Move lesion in MNI251 space from isles_train_path to dst_dir'''
     lesion_mni_path = [os.path.join(root, name) for root, dirs, files in os.walk(isles_train_path) for name in files if 'MNI152_T1_1mm' in name and 'prob' not in name and name.endswith('nii.gz')]
     for src in lesion_mni_path:
         lesion = os.path.split(src)[1]
-        print(lesion)
+        print('Moving ', lesion)
         dst = os.path.join(dst_dir, lesion)
         shutil.copy(src, dst)
 
@@ -70,19 +72,22 @@ assert(len(stroke_files_dir)==43)
 
 
 # region property
-region_prop ='--roi='
-#region_prop = '--seed='
+#region_prop ='--roi='
+region_prop = '--seed='
 #region_prop ='--roa='
 
 # pass type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
 
     pat_name = stroke_file[:stroke_file.find('_MNI152_T1_1mm.nii.gz')]
-    print(idx, pat_name)
+    print('Working on creating pass-type of connectivity matrix of ',idx, pat_name)
+    stroke_nda = ReadImage(os.path.join(stroke_dir, stroke_file))
+    number_of_seed = np.count_nonzero(stroke_nda)
     connectivity_type = '--connectivity_type=pass'
     connectivity_value = '--connectivity_value=count'
     connectivity_threshold = '--connectivity_threshold=0'
-    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
+    #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id,'--seed_count='+str(number_of_seed), '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
+    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=6', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
     network_measure_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'network_measures' in name and name.endswith('.txt')]
     network_measure_file_dst = os.path.join(os.path.split(network_measure_files[0])[0], 'network_measures', 'gt_stroke', os.path.split(network_measure_files[0].replace(source, pat_name))[1])
@@ -97,6 +102,8 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     shutil.move(connectivity_files[0], connectivity_file_dst)
     print('---'*20)
 
+
+exit()
 # end type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
 
@@ -105,7 +112,8 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     connectivity_type = '--connectivity_type=end'
     connectivity_value = '--connectivity_value=count'
     connectivity_threshold = '--connectivity_threshold=0'
-    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
+    #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
+    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=6', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
     network_measure_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'network_measures' in name and name.endswith('.txt')]
     network_measure_file_dst = os.path.join(os.path.split(network_measure_files[0])[0], 'network_measures', 'gt_stroke', os.path.split(network_measure_files[0].replace(source, pat_name))[1])
