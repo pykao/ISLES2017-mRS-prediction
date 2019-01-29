@@ -36,11 +36,11 @@ ADC_MNI152_1mm.nii.gz, ADC_MNI152_1mm_invol2refvol.mat, and ADC_MNI152_1mm_refvo
 
 OT_MNI152_1mm.nii.gz and OT_prob_MNI152_T1_1mm.nii.gz under brain lesion's directory  
 
-### 3. Run gt_fiber.py
+### 3. Run fiber_tracking.py
 
 This script generates the fiber tracts for the subject. 
 
-We seed in the whole brain region and find the fiber tracts pass through the lesion region
+We seed in the whole brain region and find the fiber tracts passing through the lesion region
 
 The outputs:
 
