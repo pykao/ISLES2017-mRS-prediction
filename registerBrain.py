@@ -40,7 +40,7 @@ def Lesions2MNI152(GTInVol, omat):
 	new_name_prob = GTInVol[:-4] + "_prob_MNI152_T1_1mm.nii.gz"
 	new_name_bin = GTInVol[:-4] + "_MNI152_T1_1mm.nii.gz"
 	subprocess.call(["flirt", "-in", GTInVol, "-ref", refVol, "-out", new_name_prob, "-init", omat, "-applyxfm"])
-	subprocess.call(["fslmaths", new_name_prob, "-thr", "0", "-bin", new_name_bin])
+	subprocess.call(["fslmaths", new_name_prob, "-thr", "0.5", "-bin", new_name_bin])
 
 
 
@@ -60,6 +60,6 @@ omat_filepaths = ISLES2017TrainingInVol2RefVolPaths()
 
 pool = Pool(6)
 
-pool.map(RegisterBrain, adc_filepaths)
+#pool.map(RegisterBrain, adc_filepaths)
 
 pool.map(Lesions2MNI152_star, zip(gt_filepaths, omat_filepaths))
