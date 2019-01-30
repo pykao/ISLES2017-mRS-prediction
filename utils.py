@@ -240,7 +240,10 @@ def extract_tractographic_features():
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
 
         # Get the lesion weights
-        lesion_weights = get_lesion_weights(stroke_mni_path)
+        #lesion_weights = get_lesion_weights(stroke_mni_path)
+        # Get the modified lesion weights
+        lesion_weights = get_modified_lesion_weights(stroke_mni_path)
+
 
         # weighted connectivity histogram
         W_dsi_pass_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_pass, axis=0), lesion_weights)
@@ -250,7 +253,7 @@ def extract_tractographic_features():
         W_dsi_end_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_end, axis=0), lesion_weights)
         W_nrm_end_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_end, axis=0), lesion_weights)
         W_bin_end_histogram_features[idx, :] = np.multiply(np.sum(W_bin_end, axis=0), lesion_weights)
-        
+
     return W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features, tractographic_list
 
 
