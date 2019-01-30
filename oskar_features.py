@@ -1,12 +1,15 @@
+import os
+import math
 import medpy
+import csv
+
+import nibabel as nib
+import numpy as np
+
 from medpy.io import load, header, save
 from medpy.features.intensity import intensities, local_mean_gauss, hemispheric_difference, local_histogram
-import os
-import numpy as np
-import math
+
 from skimage.morphology import dilation,disk
-import nibabel as nib
-import csv
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import LeaveOneOut
 from sklearn.metrics import accuracy_score
@@ -14,6 +17,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold, RFECV
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
 from sortedcontainers import SortedDict
+
+
+import paths
 
 def get_train_dataset(isles2017_dir, isles2017_training_dir):    
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
@@ -93,8 +99,8 @@ def find_3d_roundness(mask):
 	mask_major_axis_length = mask_region_props[0].major_axis_length
 	return mask_equivDiameter**2/mask_major_axis_length**2
 
-isles2017_dir = "/media/pkao/Dataset/ISLES2017"
-isles2017_training_dir = "/media/pkao/Dataset/ISLES2017/train"
+isles2017_dir = paths.isles2017_dir
+isles2017_training_dir = paths.isles2017_training_dir
 
 training_dataset = get_train_dataset(isles2017_dir, isles2017_training_dir)
 
@@ -171,5 +177,6 @@ for idx, training_folder in enumerate(sorted_train_dataset_keys):
     all_features[idx, 1656:1659] = first_region_surface, second_region_surface, third_region_surface
     all_features[idx, 1659:1662] = first_region_roundness, second_region_roundness, third_region_roundness
 
+# save oskar features and ground-truth mRS scores into numpy array
 np.save('./oskar_ISLES2016_features.npy', all_features)
 np.save('./ISLES2017_gt.npy', mRS_gt)
