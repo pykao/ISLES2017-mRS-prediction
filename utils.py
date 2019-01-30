@@ -13,25 +13,25 @@ def ReadImage(path):
     return sitk.GetArrayFromImage(sitk.ReadImage(path)).astype(np.float32)
 
 def find_list(subject_id, list):
-	''' this is used to find the stroke lesion for a subject name '''
+    ''' this is used to find the stroke lesion for a subject name '''
     files = [file for file in list if subject_id in file]
     return files[0]
 
 def find_3d_surface(mask, voxel_spacing=(1.0,1.0,1.0)):
-	''' find the surface for a 3D object '''
-	verts, faces = marching_cubes_classic(volume=mask, spacing=voxel_spacing)
-	return mesh_surface_area(verts, faces)
+    ''' find the surface for a 3D object '''
+    verts, faces = marching_cubes_classic(volume=mask, spacing=voxel_spacing)
+    return mesh_surface_area(verts, faces)
 
 def find_3d_roundness(mask):
-	''' find the roundess of a 3D object '''
-	mask_region_props = regionprops(mask.astype(int))
-	mask_area = mask_region_props[0].area
-	mask_equivDiameter = (6.0*mask_area/math.pi)**(1.0/3.0)
-	mask_major_axis_length = mask_region_props[0].major_axis_length
-	return mask_equivDiameter**2/mask_major_axis_length**2
+    ''' find the roundess of a 3D object '''
+    mask_region_props = regionprops(mask.astype(int))
+    mask_area = mask_region_props[0].area
+    mask_equivDiameter = (6.0*mask_area/math.pi)**(1.0/3.0)
+    mask_major_axis_length = mask_region_props[0].major_axis_length
+    return mask_equivDiameter**2/mask_major_axis_length**2
 
 def reshape_by_padding_upper_coords(image, new_shape, pad_value=None):
-	''' reshape the 3d matrix '''
+    ''' reshape the 3d matrix '''
     shape = tuple(list(image.shape))
     new_shape = tuple(np.max(np.concatenate((shape, new_shape)).reshape((2,len(shape))), axis=0))
     if pad_value is None:
@@ -65,21 +65,39 @@ def weight_conversion(W):
     W_nrm = W_nrm/np.amax(np.absolute(W))
     return W_nrm, W_bin
 
-def get_lesion_weights(whole_tumor_mni_path):
+def get_lesion_weights(stroke_mni_path):
     ''' get the weight vector'''
-    #print(whole_tumor_mni_path)
+    #print(stroke_mni_path)
     aal_path = os.path.join(paths.dsi_studio_path, 'atlas', 'aal.nii.gz')
     aal_nda = ReadImage(aal_path)
     aal_182_218_182 = reshape_by_padding_upper_coords(aal_nda, (182,218,182), 0)
-    whole_tumor_mni_nda = ReadImage(whole_tumor_mni_path)
+    stroke_mni_nda = ReadImage(stroke_mni_path)
     weights = np.zeros(int(np.amax(aal_182_218_182)), dtype=float)
     for bp_number in range(int(np.amax(aal_182_218_182))):
         mask = np.zeros(aal_182_218_182.shape, aal_182_218_182.dtype)
         mask[aal_182_218_182==(bp_number+1)]=1
         bp_size = float(np.count_nonzero(mask))
-        whole_tumor_in_bp = np.multiply(mask, whole_tumor_mni_nda)
-        whole_tumor_in_bp_size = float(np.count_nonzero(whole_tumor_in_bp))
-        weights[bp_number] = whole_tumor_in_bp_size/bp_size
+        stroke_in_bp = np.multiply(mask, stroke_mni_nda)
+        stroke_in_bp_size = float(np.count_nonzero(stroke_in_bp))
+        weights[bp_number] = stroke_in_bp_size/bp_size
+    return weights
+
+def get_modified_lesion_weights(stroke_mni_path):
+    ''' get the modified weight vector'''
+    #print(stroke_mni_path)
+    aal_path = os.path.join(paths.dsi_studio_path, 'atlas', 'aal.nii.gz')
+    aal_nda = ReadImage(aal_path)
+    aal_182_218_182 = reshape_by_padding_upper_coords(aal_nda, (182,218,182), 0)
+    stroke_mni_nda = ReadImage(stroke_mni_path)
+    stroke_volume = float(np.count_nonzero(stroke_mni_nda))
+    weights = np.zeros(int(np.amax(aal_182_218_182)), dtype=float)
+    for bp_number in range(int(np.amax(aal_182_218_182))):
+        mask = np.zeros(aal_182_218_182.shape, aal_182_218_182.dtype)
+        mask[aal_182_218_182==(bp_number+1)]=1
+        #bp_size = float(np.count_nonzero(mask))
+        stroke_in_bp = np.multiply(mask, stroke_mni_nda)
+        stroke_volume_in_bp = float(np.count_nonzero(stroke_in_bp))
+        weights[bp_number] = 1.0 + stroke_volume_in_bp/stroke_volume
     return weights
 
 def get_train_dataset():    
@@ -176,11 +194,15 @@ def extract_morphological_features():
         morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_surface, stroke_regions[0].solidity, stroke_roundness
     return morphological_features, morphological_list
 
-def extract_tractographic_features(region_type='roi', number_tracts = 1000000):
+#def extract_tractographic_features(region_type='roi', number_tracts = 1000000):\
+def extract_tractographic_features():
     # The ground truth lesion in subject space
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     # The connectivity matrices location 
-    connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', region_type, 'gt_stroke', str(number_tracts))
+    #connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', region_type, 'gt_stroke', str(number_tracts))
+    # New connectivity matrices location
+    connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', 'gt_stroke')
+    
     # pass type locations
     connectivity_pass_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'pass' in name and name.endswith('.mat')]
     connectivity_pass_files.sort()
@@ -228,6 +250,7 @@ def extract_tractographic_features(region_type='roi', number_tracts = 1000000):
         W_dsi_end_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_end, axis=0), lesion_weights)
         W_nrm_end_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_end, axis=0), lesion_weights)
         W_bin_end_histogram_features[idx, :] = np.multiply(np.sum(W_bin_end, axis=0), lesion_weights)
+        
     return W_dsi_pass_histogram_features, W_nrm_pass_histogram_features, W_bin_pass_histogram_features, W_dsi_end_histogram_features, W_nrm_end_histogram_features, W_bin_end_histogram_features, tractographic_list
 
 
@@ -257,3 +280,29 @@ def extract_volumetric_spatial_features(atlas_name):
         volumetric_spatial_features[idx, 0] = whole_stroke_volume - total_stroke_volume_bp
     volumetric_spatial_list =['volume_'+atlas_name+'_'+str(i) for i in range(0, int(np.amax(atlas_nda)+1))]
     return volumetric_spatial_features, volumetric_spatial_list
+
+def extract_modified_volumetric_spatial_features(atlas_name):
+    '''extract volumetric spatial features considering the total volume of the stroke lesion'''
+    stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
+    stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
+    stroke_mni_paths.sort()
+    train_dataset = get_train_dataset()
+    atlas_path = os.path.join(paths.dsi_studio_path, 'atlas', atlas_name+'.nii.gz')
+    atlas_nda = ReadImage(atlas_path)
+    if atlas_name == 'aal':
+        atlas_nda = reshape_by_padding_upper_coords(atlas_nda, (182,218,182), 0)
+    modified_volumetric_spatial_features = np.zeros((37, int(np.amax(atlas_nda))), dtype=float)
+    for idx, subject_name in enumerate(train_dataset.keys()):
+        subject_id = train_dataset[subject_name]['ID']
+        stroke_mni_path = find_list(subject_id, stroke_mni_paths)
+        stroke_mni_nda = ReadImage(stroke_mni_path)
+        whole_stroke_volume = float(np.count_nonzero(stroke_mni_nda))
+        for bp_number in range(1, int(np.amax(atlas_nda))+1):
+            mask = np.zeros(atlas_nda.shape, atlas_nda.dtype)
+            mask[atlas_nda==(bp_number)]=1
+            stroke_in_bp = np.multiply(mask, stroke_mni_nda)
+            stroke_in_bp_volume = float(np.count_nonzero(stroke_in_bp))
+            modified_volumetric_spatial_features[idx, bp_number-1] = stroke_in_bp_volume + whole_stroke_volume
+    volumetric_spatial_list =['volume_'+atlas_name+'_'+str(i) for i in range(1, int(np.amax(atlas_nda))+1)]
+    assert((len(volumetric_spatial_list))==modified_volumetric_spatial_features.shape[1])
+    return modified_volumetric_spatial_features, volumetric_spatial_list
