@@ -60,11 +60,12 @@ source ='HCP1021.1mm.fib.gz'
 assert (os.path.exists(os.path.join(work_dir, source))), 'HCP1021 template is not in the dsi studio directory'
 
 # tracking parameter
-parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01cb01d'
+#parameter_id = '--parameter_id=3D69233E9A99193F32318D24ba3Fba3Fb404b0FA4340420Fca01cb01d'
 
+# change the working directory
 os.chdir(work_dir)
 
-# list all stroke files
+# find all stroke files and sort them
 stroke_dir = dst_dir
 stroke_files_dir = os.listdir(dst_dir)
 stroke_files_dir.sort()
@@ -72,23 +73,31 @@ assert(len(stroke_files_dir)==43)
 
 
 # region property
-#region_prop ='--roi='
-region_prop = '--seed='
+# seed in the whole brain region and find the tracts passing through stroke lesion
+region_prop ='--roi='
+# seed in the stroke lesion regions and find the tracts passing through stroke lesion
+#region_prop = '--seed='
+
 #region_prop ='--roa='
 
 # pass type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
 
     pat_name = stroke_file[:stroke_file.find('_MNI152_T1_1mm.nii.gz')]
-    print('Working on creating pass-type of connectivity matrix of ',idx, pat_name)
-    stroke_nda = ReadImage(os.path.join(stroke_dir, stroke_file))
-    number_of_seed = np.count_nonzero(stroke_nda)
+    print(idx, 'Working on creating pass-type of connectivity matrix of ', pat_name)
+    #stroke_nda = ReadImage(os.path.join(stroke_dir, stroke_file))
+    #number_of_seed = np.count_nonzero(stroke_nda)
+    number_of_seed = 964748
+    # connectivity matrix's parameters
     connectivity_type = '--connectivity_type=pass'
     connectivity_value = '--connectivity_value=count'
     connectivity_threshold = '--connectivity_threshold=0'
     #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id,'--seed_count='+str(number_of_seed), '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
-    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=6', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
+    
+    # fiber tracking and setting the tracking parameters
+    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=8', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
+    # move the files
     network_measure_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'network_measures' in name and name.endswith('.txt')]
     network_measure_file_dst = os.path.join(os.path.split(network_measure_files[0])[0], 'network_measures', 'gt_stroke', os.path.split(network_measure_files[0].replace(source, pat_name))[1])
     shutil.move(network_measure_files[0], network_measure_file_dst) 
@@ -100,18 +109,23 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     connectivity_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'connectivity' in name and name.endswith('.mat')]
     connectivity_file_dst = os.path.join(os.path.split(connectivity_files[0])[0], 'connectivity', 'gt_stroke', os.path.split(connectivity_files[0].replace(source, pat_name))[1])
     shutil.move(connectivity_files[0], connectivity_file_dst)
-    print('---'*20)
+    print('---'*30)
 
 
-exit()
 # end type of connectivity matrices
 for idx, stroke_file in enumerate(stroke_files_dir):
 
     pat_name = stroke_file[:stroke_file.find('_MNI152_T1_1mm.nii.gz')]
-    print(idx, pat_name)
+    print(idx, 'Working on creating end-type of connectivity matrix of ', pat_name)
+    #stroke_nda = ReadImage(os.path.join(stroke_dir, stroke_file))
+    #number_of_seed = np.count_nonzero(stroke_nda)
+    number_of_seed = 964748
+    # connectivity matrix's parameters
     connectivity_type = '--connectivity_type=end'
     connectivity_value = '--connectivity_value=count'
     connectivity_threshold = '--connectivity_threshold=0'
+    
+    # fiber tracking and setting the tracking parameters
     #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
     subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=6', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
@@ -126,4 +140,4 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     connectivity_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'connectivity' in name and name.endswith('.mat')]
     connectivity_file_dst = os.path.join(os.path.split(connectivity_files[0])[0], 'connectivity', 'gt_stroke', os.path.split(connectivity_files[0].replace(source, pat_name))[1])
     shutil.move(connectivity_files[0], connectivity_file_dst)
-    print('---'*20)
+    print('---'*30)
