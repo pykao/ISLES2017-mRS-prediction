@@ -10,13 +10,7 @@ from medpy.io import load, header, save
 from medpy.features.intensity import intensities, local_mean_gauss, hemispheric_difference, local_histogram
 
 from skimage.morphology import dilation,disk
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import LeaveOneOut
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import VarianceThreshold, RFECV
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
-from sortedcontainers import SortedDict
 
 
 import paths
