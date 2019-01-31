@@ -4,7 +4,6 @@ from sklearn.model_selection import LeaveOneOut
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold, RFECV
-from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
 
 y = np.load('./ISLES2017_gt.npy')
 oskar_features = np.load('./oskar_ISLES2016_features.npy')
