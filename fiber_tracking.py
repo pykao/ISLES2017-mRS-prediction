@@ -87,7 +87,8 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     print(idx, 'Working on creating pass-type of connectivity matrix of ', pat_name)
     #stroke_nda = ReadImage(os.path.join(stroke_dir, stroke_file))
     #number_of_seed = np.count_nonzero(stroke_nda)
-    number_of_seed = 964748
+    #number_of_seed = 964748
+    number_of_seed = 2235858
     # connectivity matrix's parameters
     connectivity_type = '--connectivity_type=pass'
     connectivity_value = '--connectivity_value=count'
@@ -95,7 +96,7 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id,'--seed_count='+str(number_of_seed), '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
     
     # fiber tracking and setting the tracking parameters
-    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=8', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
+    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--initial_dir=2', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=6', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
     # move the files
     network_measure_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'network_measures' in name and name.endswith('.txt')]
@@ -119,7 +120,8 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     print(idx, 'Working on creating end-type of connectivity matrix of ', pat_name)
     #stroke_nda = ReadImage(os.path.join(stroke_dir, stroke_file))
     #number_of_seed = np.count_nonzero(stroke_nda)
-    number_of_seed = 964748
+    #number_of_seed = 964748
+    number_of_seed = 2235858
     # connectivity matrix's parameters
     connectivity_type = '--connectivity_type=end'
     connectivity_value = '--connectivity_value=count'
@@ -127,7 +129,7 @@ for idx, stroke_file in enumerate(stroke_files_dir):
     
     # fiber tracking and setting the tracking parameters
     #subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), parameter_id, '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
-    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=6', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
+    subprocess.call(['./dsi_studio', '--action=trk', '--source='+source, region_prop+os.path.join(stroke_dir, stroke_file), '--seed_count='+str(number_of_seed), '--fa_threshold=0.15958', '--seed_plan=1', '--initial_dir=2', '--interpolation=0', '--turning_angle=90.0', '--step_size=.5', '--smoothing=.5', '--min_length=3', '--max_length=500', '--thread_count=6', '--output=no_file', '--connectivity=aal', connectivity_type, connectivity_value, connectivity_threshold])
 
     network_measure_files = [os.path.join(root, name) for root, dirs, files in os.walk(work_dir) for name in files if 'network_measures' in name and name.endswith('.txt')]
     network_measure_file_dst = os.path.join(os.path.split(network_measure_files[0])[0], 'network_measures', 'gt_stroke', os.path.split(network_measure_files[0].replace(source, pat_name))[1])
