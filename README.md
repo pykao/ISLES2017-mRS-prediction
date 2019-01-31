@@ -8,6 +8,10 @@
 
 Python 3.6
 
+## Required Python Libraries
+
+```SimpleITK, scipy, skimage```
+
 ## Required Softwares
 
 For image registration, you need to download [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki).
@@ -60,7 +64,13 @@ Perform mRS prediction on features extracted from the lesion region with stratif
 
 ## 6. oskar_features.py (run in python 2.7)
 
-Extract the features descirbe in the ISLES2016 winning paper
+Required python libraries: 
+
+```nibabel, medpy, skimage``` 
+
+Extract the features descirbe in the [ISLES2016 winning paper](https://link.springer.com/chapter/10.1007/978-3-319-55524-9_21)
+
+This script extracts 1662 features for each subject.
 
 ## 7. oskar_predict_loo.py
 
