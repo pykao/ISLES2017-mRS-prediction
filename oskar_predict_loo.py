@@ -17,7 +17,7 @@ normalized_selected_oskar_features = scaler.fit_transform(selected_oskar_feature
 
 # Leave One Out Cross Validation
 loo = LeaveOneOut()
-estimator = RandomForestRegressor(n_estimators=300, random_state=1989, n_jobs=-1)
+estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
 rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
 
 
@@ -31,7 +31,6 @@ idx=0
 for train_index, test_index in loo.split(X):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
-    #estimator = RandomForestRegressor(n_estimators=300, random_state=1989, n_jobs=-1)
     estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
     estimator.fit(X_train, y_train)
     y_pred = estimator.predict(X_test)
