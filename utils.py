@@ -239,6 +239,7 @@ def extract_tractographic_features():
 
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
 
+        # =================================== Weight Vector ========================================== #
         # Get the lesion weights
         #lesion_weights = get_lesion_weights(stroke_mni_path)
         # Get the modified lesion weights
