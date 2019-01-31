@@ -25,7 +25,7 @@ from utils import extract_volumetric_spatial_features, extract_morphological_fea
 from xgboost import XGBRegressor
 
 # =========================================== setup logs ====================================== #
-log = os.path.join(os.getcwd(), 'log_paper.txt')
+log = os.path.join(os.getcwd(), 'log_new.txt')
 fmt = '%(asctime)s %(message)s'
 logging.basicConfig(level=logging.INFO, format=fmt, filename=log)
 console = logging.StreamHandler()
@@ -33,13 +33,14 @@ console.setLevel(logging.INFO)
 console.setFormatter(logging.Formatter(fmt))
 logging.getLogger('').addHandler(console)
 
-# ============================================ The target ===================================== #
-logging.info('Extracting mRS scores...')
-mRS_gt = extract_gt_mRS()
+# =================================== Groundtruth of mRS scores ================================ #
+#logging.info('Extracting mRS scores...')
+#mRS_gt = extract_gt_mRS()
+
 
 # ======================================== Feature Extraction ================================= #
 
-logging.info('Feature extraction...')
+#logging.info('Feature extraction...')
 
 #logging.info('Extracting volumetric features...')
 #volumetric_features, volumetric_list = extract_volumetric_features()
@@ -50,43 +51,45 @@ logging.info('Feature extraction...')
 #logging.info('Extracting morphological features...')
 #morphological_features, morphological_list = extract_morphological_features()
 
-logging.info('Extracting volumetric and spatial features...')
+#logging.info('Extracting volumetric and spatial features...')
 #atlas_name = 'HarvardOxfordSub'
-atlas_name = 'HarvardOxfordCort'
+#atlas_name = 'HarvardOxfordCort'
 #atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
-volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
+#volumetric_spatial_features, volumetric_spatial_list = extract_volumetric_spatial_features(atlas_name)
 
-x_range = np.arange(volumetric_spatial_features.shape[1])
-lesion_histogram = volumetric_spatial_features.sum(axis=0)
-fig, ax = plt.subplots()
-plt.bar(x_range, lesion_histogram)
-plt.show()
+#x_range = np.arange(volumetric_spatial_features.shape[1])
+#lesion_histogram = volumetric_spatial_features.sum(axis=0)
+#fig, ax = plt.subplots()
+#plt.bar(x_range, lesion_histogram)
+#plt.show()
 
-
-exit()
 # original feature
-logging.info('Using original volumetric-spatial feature...')
-volumetric_spatial_features = volumetric_spatial_features[:, 1:]
-del volumetric_spatial_list[0]
-print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
+#logging.info('Using original volumetric-spatial feature...')
+#volumetric_spatial_features = volumetric_spatial_features[:, 1:]
+#del volumetric_spatial_list[0]
+#print(volumetric_spatial_features.shape, len(volumetric_spatial_list))
 
 
-#logging.info('Extracting tractographic features...')
+logging.info('Extracting tractographic features...')
 #region_type='roi'
 #number_tracts = '1000000'
 #logging.info('Type of region: %s' %region_type)
 #logging.info('Number of tracts: %s' %number_tracts)
 
+# old
 #W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features(region_type, number_tracts)
-#np.save('./W_dsi_pass.npy', W_dsi_pass)
-#np.save('./W_nrm_pass.npy', W_nrm_pass)
-#np.save('./W_bin_pass.npy', W_bin_pass)
-#np.save('./W_dsi_end.npy', W_dsi_end)
-#np.save('./W_nrm_end.npy', W_nrm_end)
-#np.save('./W_bin_end.npy', W_nrm_end)
+# new
+W_dsi_pass, W_nrm_pass, W_bin_pass, W_dsi_end, W_nrm_end, W_bin_end, tract_list = extract_tractographic_features()
+np.save('./W_dsi_pass.npy', W_dsi_pass)
+np.save('./W_nrm_pass.npy', W_nrm_pass)
+np.save('./W_bin_pass.npy', W_bin_pass)
+np.save('./W_dsi_end.npy', W_dsi_end)
+np.save('./W_nrm_end.npy', W_nrm_end)
+np.save('./W_bin_end.npy', W_nrm_end)
+exit()
 
 logging.info('Completed feature extraction...')
 
@@ -120,7 +123,7 @@ logging.info('Completed features normalization...')
 # Perforamce Feature Selection
 # Remove features with all zeros
 logging.info('Remove features with all zeros...')
-sel = VarianceThreshold(0)
+sel = VarianceThreshold(0.85*(1-0.85))
 
 #selected_normalized_volumetric_features = sel.fit_transform(normalized_volumetric_features)
 #selected_volumetric_list = [name for idx, name in enumerate(volumetric_list) if sel.get_support()[idx]]
