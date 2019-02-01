@@ -33,7 +33,6 @@ idx=0
 for train_index, test_index in loo.split(X):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
-    print(y_test)
     estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
     estimator.fit(X_train, y_train)
     y_pred = estimator.predict(X_test)
