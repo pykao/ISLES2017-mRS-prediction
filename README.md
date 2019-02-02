@@ -62,7 +62,7 @@ Perform mRS prediction on features extracted from the lesion region with-leave o
 
 Perform mRS prediction on features extracted from the lesion region with stratified 3-fold cross-validation on the ISLES2017 training dataset
 
-## 6. oskar_features.py (run in python 2.7)
+## 6. extract_oskar_features.py (run in python 2.7)
 
 Required python libraries: 
 
