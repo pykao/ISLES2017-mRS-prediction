@@ -195,7 +195,7 @@ def extract_morphological_features():
     return morphological_features, morphological_list
 
 #def extract_tractographic_features(region_type='roi', number_tracts = 1000000):\
-def extract_tractographic_features():
+def extract_tractographic_features(weight_type):
     # The ground truth lesion in subject space
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     # The connectivity matrices location 
@@ -241,11 +241,17 @@ def extract_tractographic_features():
 
         # =================================== Weight Vector ========================================== #
         # Get the lesion weights
-        #lesion_weights = get_lesion_weights(stroke_mni_path)
+        if 'ori' in weight_type:
+            print('using original weight')
+            lesion_weights = get_lesion_weights(stroke_mni_path)
         # Get the modified lesion weights
-        #lesion_weights = get_modified_lesion_weights(stroke_mni_path)
+        if 'mod' in weight_type:
+            print('using modified weight')
+            lesion_weights = get_modified_lesion_weights(stroke_mni_path)
         # No weight
-        lesion_weights = np.ones((1,116), dtype=np.float32)
+        if 'one' in weight_type:
+            print('weight is one')
+            lesion_weights = np.ones((1,116), dtype=np.float32)
 
 
         # weighted connectivity histogram
