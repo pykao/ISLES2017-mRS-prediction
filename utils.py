@@ -53,7 +53,7 @@ def reshape_by_padding_upper_coords(image, new_shape, pad_value=None):
 def threshold_connectivity_matrix(connectivity_matrix, threshold=0.01):
     ''' threshold the connectiivty matrix in order to remove the noise'''
     thresholded_connectivity_matrix= np.copy(connectivity_matrix)
-    thresholded_connectivity_matrix[connectivity_matrix <= threshold*np.amax(connectivity_matrix)] = 0
+    thresholded_connectivity_matrix[connectivity_matrix <= threshold*np.amax(connectivity_matrix)] = 0.0
     return thresholded_connectivity_matrix
 
 
@@ -242,15 +242,12 @@ def extract_tractographic_features(weight_type):
         # =================================== Weight Vector ========================================== #
         # Get the lesion weights
         if 'ori' in weight_type:
-            print('using original weight')
             lesion_weights = get_lesion_weights(stroke_mni_path)
         # Get the modified lesion weights
         if 'mod' in weight_type:
-            print('using modified weight')
             lesion_weights = get_modified_lesion_weights(stroke_mni_path)
         # No weight
         if 'one' in weight_type:
-            print('weight is one')
             lesion_weights = np.ones((1,116), dtype=np.float32)
 
 
