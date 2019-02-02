@@ -243,9 +243,9 @@ def extract_tractographic_features():
         # Get the lesion weights
         #lesion_weights = get_lesion_weights(stroke_mni_path)
         # Get the modified lesion weights
-        lesion_weights = get_modified_lesion_weights(stroke_mni_path)
+        #lesion_weights = get_modified_lesion_weights(stroke_mni_path)
         # No weight
-        #lesion_weights = np.ones((1,116), dtype=np.float32)
+        lesion_weights = np.ones((1,116), dtype=np.float32)
 
 
         # weighted connectivity histogram
