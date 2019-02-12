@@ -195,7 +195,7 @@ def extract_morphological_features():
     return morphological_features, morphological_list
 
 #def extract_tractographic_features(region_type='roi', number_tracts = 1000000):\
-def extract_tractographic_features(weight_type):
+def extract_tractographic_features(weight_type, aal_regions=120):
     # The ground truth lesion in subject space
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     # The connectivity matrices location 
@@ -213,17 +213,17 @@ def extract_tractographic_features(weight_type):
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
-    tractographic_list = ["tract_aal_"+str(i) for i in range(1, 117)]
+    tractographic_list = ["tract_aal_"+str(i) for i in range(1, aal_regions+1)]
     assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
     train_dataset = get_train_dataset()
     # Tractographic Features
-    W_dsi_pass_histogram_features = np.zeros((37, 116), dtype=np.float32)
-    W_nrm_pass_histogram_features = np.zeros((37, 116), dtype=np.float32)
-    W_bin_pass_histogram_features = np.zeros((37, 116), dtype=np.float32)
+    W_dsi_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_nrm_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_bin_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
 
-    W_dsi_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
-    W_nrm_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
-    W_bin_end_histogram_features = np.zeros((37, 116), dtype=np.float32)
+    W_dsi_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_nrm_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_bin_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
 
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
@@ -248,7 +248,7 @@ def extract_tractographic_features(weight_type):
             lesion_weights = get_modified_lesion_weights(stroke_mni_path)
         # No weight
         if 'one' in weight_type:
-            lesion_weights = np.ones((1,116), dtype=np.float32)
+            lesion_weights = np.ones((1,aal_regions), dtype=np.float32)
 
 
         # weighted connectivity histogram
