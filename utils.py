@@ -195,7 +195,7 @@ def extract_morphological_features():
     return morphological_features, morphological_list
 
 #def extract_tractographic_features(region_type='roi', number_tracts = 1000000):\
-def extract_tractographic_features(weight_type, aal_regions=120):
+def extract_tractographic_features(weight_type, aal_regions=116):
     # The ground truth lesion in subject space
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     # The connectivity matrices location 
