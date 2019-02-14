@@ -3,8 +3,6 @@ __pycache__
 *.npy
 *.png
 confusion_matrix*
-rfc*
-rfr*
 *.nii
 *.nii.gz
 *.pyc
@@ -12,5 +10,7 @@ test.py
 dca*
 rfecv*
 *.m
-heatmap.py
 *.swp
+gt
+others
+features
