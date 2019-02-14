@@ -8,10 +8,8 @@ import numpy as np
 
 from medpy.io import load, header, save
 from medpy.features.intensity import intensities, local_mean_gauss, hemispheric_difference, local_histogram
-
 from skimage.morphology import dilation,disk
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
-
 
 import paths
 
@@ -172,5 +170,10 @@ for idx, training_folder in enumerate(sorted_train_dataset_keys):
     all_features[idx, 1659:1662] = first_region_roundness, second_region_roundness, third_region_roundness
 
 # save oskar features and ground-truth mRS scores into numpy array
-np.save('./oskar_features.npy', all_features)
-np.save('./ISLES2017_gt.npy', mRS_gt)
+if not os.path.exists('./features/'):
+    os.mkdir('./features/')
+if not os.path.exists('./gt/'):
+    os.mkdir('./gt/')
+
+np.save('./features/oskar_features.npy', all_features)
+np.save('./gt/ISLES2017_gt.npy', mRS_gt)
