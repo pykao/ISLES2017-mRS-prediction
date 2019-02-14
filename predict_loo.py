@@ -154,7 +154,7 @@ selected_features_list = [name for idx, name in enumerate(features_list) if sel.
 if use_original_feature:
     # ====================================== Original Features ====================================== #
     logging.info('Using original features...')
-    X, X_list = features, features_list
+    X, X_list = normalized_features, features_list
 elif rfecv_feature_selection:
     # ======================================= RFECV Features ======================================== #
     logging.info('Using RFECV features...')
@@ -217,7 +217,7 @@ if not os.path.exists('./predicted_labels/'):
 #np.save('./predicted_labels/ori_aal_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/rfecv_ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
-np.save('./predicted_labels/oskar_pred_loo.npy', y_pred_label)
+#np.save('./predicted_labels/oskar_pred_loo.npy', y_pred_label)
 
 
 # =========================== Feature Importance ================================ #
