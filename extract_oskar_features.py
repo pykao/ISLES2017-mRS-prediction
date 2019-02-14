@@ -172,5 +172,5 @@ for idx, training_folder in enumerate(sorted_train_dataset_keys):
     all_features[idx, 1659:1662] = first_region_roundness, second_region_roundness, third_region_roundness
 
 # save oskar features and ground-truth mRS scores into numpy array
-np.save('./oskar_ISLES2016_features.npy', all_features)
+np.save('./oskar_features.npy', all_features)
 np.save('./ISLES2017_gt.npy', mRS_gt)
