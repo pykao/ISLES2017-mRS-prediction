@@ -84,3 +84,6 @@ Provide you different types of features and tools for processing the brain image
 
 Provide you the confusion matrix and the p-value
 
+## heatmap.py
+
+Create the heatmap of the stroke lesion in MNI space
