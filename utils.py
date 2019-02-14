@@ -97,7 +97,8 @@ def get_modified_lesion_weights(stroke_mni_path):
         #bp_size = float(np.count_nonzero(mask))
         stroke_in_bp = np.multiply(mask, stroke_mni_nda)
         stroke_volume_in_bp = float(np.count_nonzero(stroke_in_bp))
-        weights[bp_number] = 1.0 + stroke_volume_in_bp/stroke_volume
+        #weights[bp_number] = 1.0 + stroke_volume_in_bp/stroke_volume
+        weights[bp_number] = stroke_volume + stroke_volume_in_bp
     return weights
 
 def get_train_dataset():    
