@@ -55,22 +55,22 @@ rfecv_feature_selection = False
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
 
-feature_type = 'oskar'
+#feature_type = 'oskar'
 
 #feature_type = 'tract_dsi_pass'
 #feature_type = 'tract_nrm_pass'
 #feature_type = 'tract_bin_pass'
 #feature_type = 'tract_dsi_end'
 #feature_type = 'tract_nrm_end'
-#feature_type = 'tract_bin_end'
+feature_type = 'tract_bin_end'
 # original
 #weight_type = 'original'
 # modified
-#weight_type = 'modified'
+weight_type = 'modified'
 # one
 #weight_type = 'one'
 
-#aal_regions = 116
+aal_regions = 116
 
 # =================================== Groundtruth of mRS scores ================================ #
 logging.info('Extracting mRS scores...')
@@ -121,7 +121,6 @@ if 'oskar' in feature_type:
     features = np.load('./features/oskar_features.npy')
     features_list = list(range(1662))
 
-print(features[0,:])
 
 # =============================== Save Original Features ======================================= #
 
