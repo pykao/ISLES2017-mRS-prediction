@@ -5,17 +5,16 @@ from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold, RFECV
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
-from utils import extract_gt_mRS
 
-y = np.load('./ISLES2017_gt.npy')
+y = np.load('./gt/ISLES2017_gt.npy')
 
-oskar_features = np.load('./oskar_ISLES2016_features.npy')
-
-sel = VarianceThreshold(0.85*(1-0.85))
-selected_oskar_features = sel.fit_transform(oskar_features)
+oskar_features = np.load('./features/oskar_features.npy')
 
 scaler = StandardScaler()
-normalized_selected_oskar_features = scaler.fit_transform(selected_oskar_features)
+normalized_oskar_features = scaler.fit_transform(oskar_features)
+
+sel = VarianceThreshold(0.85*(1-0.85))
+selected_normalized_oskar_features = sel.fit_transform(normalized_oskar_features)
 
 # Leave One Out Cross Validation
 loo = LeaveOneOut()
@@ -23,9 +22,8 @@ estimator = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=19
 rfecv = RFECV(estimator, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
 
 
-#X = rfecv.fit_transform(normalized_selected_oskar_features, y)
-X = normalized_selected_oskar_features
-#X = all_features
+X = rfecv.fit_transform(selected_normalized_oskar_features, y)
+
 
 y_pred_label = np.zeros((37,1), dtype=np.float32)
 y_abs_error = np.zeros((37,1), dtype=np.float32)
