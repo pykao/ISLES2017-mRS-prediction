@@ -58,11 +58,7 @@ end-type network measures and pass-type network measures
 
 Perform mRS prediction on features extracted from the lesion region with-leave one-out cross-validation on the ISLES2017 training dataset
 
-## 5. predict_skf.py
-
-Perform mRS prediction on features extracted from the lesion region with stratified 3-fold cross-validation on the ISLES2017 training dataset
-
-## 6. extract_oskar_features.py (run in python 2.7)
+## 5. extract_oskar_features.py (run in python 2.7)
 
 Required python libraries: 
 
@@ -72,9 +68,6 @@ Extract the features descirbe in the [ISLES2016 winning paper](https://link.spri
 
 This script extracts 1662 features for each subject.
 
-## 7. oskar_predict_loo.py
-
-Perform mR prediction on oskar's features with leave-one-out cross-validation on the ISLES2017 training dataset
 
 ## utils.py
 
