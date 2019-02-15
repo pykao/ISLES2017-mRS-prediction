@@ -34,8 +34,8 @@ console.setFormatter(logging.Formatter(fmt))
 logging.getLogger('').addHandler(console)
 
 # ======================================= Parameters Setting ================================== #
-use_original_feature = True
-rfecv_feature_selection = False
+use_original_feature = False
+rfecv_feature_selection = True
 
 
 # ======================================== Select Feature  ==================================== #
@@ -132,7 +132,7 @@ if not os.path.exists('./features/'):
 #np.save('./features/morphological_features.npy', features)
 #np.save('./features/ori_aal_features.npy', features)
 #np.save('./features/ori_tract_nrm_end_aal_features.npy', features)
-
+np.save('./features/mod_tract_bin_end_aal_features.npy', features)
 
 # ==============================  Feature Normalization ========================================= #
 
@@ -217,7 +217,7 @@ if not os.path.exists('./predicted_labels/'):
 #np.save('./predicted_labels/rfecv_ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/oskar_pred_loo.npy', y_pred_label)
-
+np.save('./predicted_labels/mod_tract_bin_end_aal_pred_loo.npy', y_pred_label)
 
 # =========================== Feature Importance ================================ #
 
