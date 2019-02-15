@@ -7,7 +7,7 @@ import itertools
 
 
 def plot_confusion_matrix(cm, classes,
-                          normalize=False,
+                          normalize=True,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
     """
@@ -16,22 +16,26 @@ def plot_confusion_matrix(cm, classes,
     """
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm = np.round(100*cm).astype(int)
         print("Normalized confusion matrix")
+        plt.imshow(cm, clim=(0,100), interpolation='nearest', cmap=cmap)
     else:
         print('Confusion matrix, without normalization')
+        plt.imshow(cm, interpolation='nearest', cmap=cmap)
 
     print(cm)
     
 
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    
     plt.title(title, fontsize = 30)
     cb = plt.colorbar()
     cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=20)
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=45, fontsize = 30)
-    plt.yticks(tick_marks, classes, fontsize = 30)
+    plt.yticks(tick_marks, classes, rotation=45, fontsize = 30)
 
-    fmt = '.2f' if normalize else 'd'
+    #fmt = '.2f' if normalize else 'd'
+    fmt = 'd'
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         plt.text(j, i, format(cm[i, j], fmt),
@@ -94,8 +98,8 @@ oskar_ae = np.absolute(y-oskar_isles2016_pred)
 
 
 # confusion_matrix(y_true, y_pred)
-cnf_matrix_volume = confusion_matrix(y, aal_tract_pred)
+cnf_matrix_volume = confusion_matrix(y, volumetric_pred)
 np.set_printoptions(precision=2)
 plt.figure()
 plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
-                      title="Confusion matrix (Tractographic Feature)")
+                      title="Confusion matrix (Volumetric Feature)")
