@@ -7,7 +7,7 @@ import itertools
 
 
 def plot_confusion_matrix(cm, classes,
-                          normalize=True,
+                          normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
     """
@@ -98,8 +98,8 @@ oskar_ae = np.absolute(y-oskar_isles2016_pred)
 
 
 # confusion_matrix(y_true, y_pred)
-cnf_matrix_volume = confusion_matrix(y, volumetric_pred)
+cnf_matrix_volume = confusion_matrix(y, oskar_isles2016_pred)
 np.set_printoptions(precision=2)
 plt.figure()
 plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
-                      title="Confusion matrix (Volumetric Feature)")
+                      title="Confusion matrix (Oskar Feature)")
