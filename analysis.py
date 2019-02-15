@@ -48,44 +48,42 @@ mRS = extract_gt_mRS()
 y = mRS.reshape((37,1))
 
 # Original Features
-
-ori_morphological_pred = np.load('./rfr_loo/rfr_morphological_pred_loo_wofs.npy')
-ori_aal_ori_pred = np.load('./rfr_loo/rfr_aal_ori_pred_loo_wofs.npy')
-ori_aal_Wdsi_end_roi_pred = np.load('./rfr_loo/rfr_aal_Wdsi_end_roi_pred_loo_wofs.npy')
-ori_oskar_isles2016_pred = np.load('./rfr_loo/rfr_oskar_pred_loo_wofs.npy')
+ori_morphological_pred = np.load('./predicted_labels/morphological_pred_loo.npy')
+ori_aal_ori_pred = np.load('./predicted_labels/ori_aal_pred_loo.npy')
+ori_tract_pred = np.load('./predicted_labels/ori_tract_nrm_end_aal_pred_loo.npy')
+ori_oskar_isles2016_pred = np.load('./predicted_labels/oskar_pred_loo.npy')
 
 
 # absolute error of original features
-ori_tractographic_ae = np.absolute(y-ori_aal_Wdsi_end_roi_pred)
+ori_tractographic_ae = np.absolute(y-ori_tract_pred)
 ori_aal_ori_ae = np.absolute(y-ori_aal_ori_pred)
 ori_morphological_ae = np.absolute(y-ori_morphological_pred)
 ori_oskar_ae = np.absolute(y-ori_oskar_isles2016_pred)
 
+
+
 # Features with feature selection
 
-volumetric_pred = np.load('./rfr_loo/rfr_volumetric_pred_loo.npy')
-spatial_pred = np.load('./rfr_loo/rfr_spatial_pred_loo.npy')
-morphological_pred = np.load('./rfr_loo/rfr_morphological_pred_loo.npy')
-#HarvardOxfordCort_pred = np.load('./rfr_loo/rfr_HarvardOxfordCort_pred_loo.npy')
-#aal_pred = np.load('./rfr_loo/rfr_aal_pred_loo.npy')
-aal_ori_pred = np.load('./rfr_loo/rfr_aal_ori_pred_loo.npy')
-aal_Wdsi_end_roi_pred = np.load('./rfr_loo/rfr_aal_Wdsi_end_roi_pred_loo.npy')
-oskar_isles2016_pred = np.load('./rfr_loo/rfr_oskar_pred_loo.npy')
+volumetric_pred = np.load('./predicted_labels/rfecv_volumetric_pred_loo.npy')
+spatial_pred = np.load('./predicted_labels/rfecv_spatial_pred_loo.npy')
+morphological_pred = np.load('./predicted_labels/rfecv_morphological_pred_loo.npy')
+aal_ori_pred = np.load('./predicted_labels/rfecv_ori_aal_pred_loo.npy')
+aal_tract_pred = np.load('./predicted_labels/rfecv_ori_tract_nrm_end_aal_pred_loo.npy')
+oskar_isles2016_pred = np.load('./predicted_labels/rfecv_oskar_pred_loo.npy')
 
 # absolute error of features with feature selection
-tractographic_ae = np.absolute(y-aal_Wdsi_end_roi_pred)
+tractographic_ae = np.absolute(y-aal_tract_pred)
 volumetric_ae = np.absolute(y-volumetric_pred)
 spatial_ae = np.absolute(y-spatial_pred)
 morphological_ae = np.absolute(y-morphological_pred)
-#HarvardOxfordCort_ae = np.absolute(y-HarvardOxfordCort_pred)
-#aal_ae = np.absolute(y-aal_pred)
 aal_ori_ae = np.absolute(y-aal_ori_pred)
 oskar_ae = np.absolute(y-oskar_isles2016_pred)
-#print(np.median(HarvardOxfordCort_ae))
 
 
 ## p value of tractographic feature vs other features 
-#print(stats.ttest_rel(tractographic_ae, morphological_ae))
+
+#print(stats.ttest_rel(aal_tract_pred, oskar_isles2016_pred))
+
 
 ## p value of original feature vs feature with feature selection
 #print(stats.ttest_rel(ori_tractographic_ae, tractographic_ae))
@@ -94,8 +92,9 @@ oskar_ae = np.absolute(y-oskar_isles2016_pred)
 #print(stats.ttest_rel(ori_oskar_ae, oskar_ae))
 
 
+
 # confusion_matrix(y_true, y_pred)
-cnf_matrix_volume = confusion_matrix(y, aal_Wdsi_end_roi_pred)
+cnf_matrix_volume = confusion_matrix(y, aal_tract_pred)
 np.set_printoptions(precision=2)
 plt.figure()
 plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
