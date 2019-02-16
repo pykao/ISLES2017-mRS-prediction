@@ -1,5 +1,7 @@
 # Prediction of Modified Rankin Scale (mRS) in Stroke Patients with Tractographic Features
 
+This repository extracts the tractograpic feature, other first-order features and the state-of-the-art feature from the stroke lesion. A random forest regressor is used with one type of feature to predict the modified Rankin Scale of stroke patients. 
+
 ## Dataset
 
 [Ischemic Stroke Lesion Segmentation (ISLES) 2017](http://www.isles-challenge.org/ISLES2017/)
