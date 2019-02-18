@@ -7,7 +7,7 @@ import itertools
 
 
 def plot_confusion_matrix(cm, classes,
-                          normalize=False,
+                          normalize=True,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
     """
@@ -27,7 +27,7 @@ def plot_confusion_matrix(cm, classes,
     
 
     
-    plt.title(title, fontsize = 30)
+    plt.title(title, fontsize = 40)
     cb = plt.colorbar()
     cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=20)
     tick_marks = np.arange(len(classes))
@@ -42,8 +42,8 @@ def plot_confusion_matrix(cm, classes,
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black", fontsize = 30)
 
-    plt.ylabel('True label', fontsize = 30)
-    plt.xlabel('Predicted label', fontsize = 30)
+    plt.ylabel('True mRS grade', fontsize = 30)
+    plt.xlabel('Predicted mRS grade', fontsize = 30)
     plt.tight_layout()
     plt.show()
 
@@ -102,4 +102,4 @@ cnf_matrix_volume = confusion_matrix(y, oskar_isles2016_pred)
 np.set_printoptions(precision=2)
 plt.figure()
 plot_confusion_matrix(cnf_matrix_volume, classes=[0, 1, 2, 3, 4],
-                      title="Confusion matrix (Oskar Feature)")
+                      title="Confusion matrix (Maier and Handels)")
