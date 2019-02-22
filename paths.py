@@ -6,3 +6,5 @@ isles2017_training_dir = "/media/pkao/Dataset/ISLES2017/train"
 mni152_1mm_path = '/usr/share/fsl/data/standard/MNI152_T1_1mm_brain.nii.gz'
 # The directory of dsi studio
 dsi_studio_path = '/home/pkao/dsistudio/dsi_studio_64'
+# The directory of connectivity matrices of HCP dataset
+hcp_connectivity_matrices_path = '/home/pkao/dsistudio/dsi_studio_64/HCP1021-1mm'
