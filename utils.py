@@ -8,6 +8,22 @@ import math
 from scipy.io import loadmat
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
 
+def get_hcp_connectivity_matrice(hcp_connectivity_matrices_path = paths.hcp_connectivity_matrices_path):
+	
+	end_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.end.connectivity.mat')
+	
+	pass_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.pass.connectivity.mat')
+
+	end_obj = loadmat(end_matrix_path)
+
+	end_matrix = end_obj['connectivity']
+
+	pass_obj = loadmat(pass_matrix_path)
+
+	pass_matrix = pass_obj['connectivity']
+
+	return pass_matrix, end_matrix
+
 def ReadImage(path):
     ''' This code returns the numpy nd array for a MR image at path'''
     return sitk.GetArrayFromImage(sitk.ReadImage(path)).astype(np.float32)
