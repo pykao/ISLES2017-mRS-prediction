@@ -8,21 +8,31 @@ import math
 from scipy.io import loadmat
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
 
+def divide_hcp(connectivity_matrix, hcp_connectivity):
+	assert(connectivity_matrix.shape == hcp_connectivity.shape)
+	output_matrix = np.zeros(connectivity_matrix.shape)
+	for i in range(connectivity_matrix.shape[0]):
+		for j in range(connectivity_matrix.shape[1]):
+			if hcp_connectivity[i,j] != 0:
+				output_matrix[i,j] = connectivity_matrix[i,j]/hcp_connectivity[i,j]
+	return output_matrix
+
+
 def get_hcp_connectivity_matrice(hcp_connectivity_matrices_path = paths.hcp_connectivity_matrices_path):
-	
-	end_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.end.connectivity.mat')
-	
-	pass_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.pass.connectivity.mat')
+    
+    end_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.end.connectivity.mat')
+    
+    pass_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.pass.connectivity.mat')
 
-	end_obj = loadmat(end_matrix_path)
+    end_obj = loadmat(end_matrix_path)
 
-	end_matrix = end_obj['connectivity']
+    end_matrix = end_obj['connectivity']
 
-	pass_obj = loadmat(pass_matrix_path)
+    pass_obj = loadmat(pass_matrix_path)
 
-	pass_matrix = pass_obj['connectivity']
+    pass_matrix = pass_obj['connectivity']
 
-	return pass_matrix, end_matrix
+    return pass_matrix, end_matrix
 
 def ReadImage(path):
     ''' This code returns the numpy nd array for a MR image at path'''
@@ -140,6 +150,7 @@ def get_train_dataset():
                     train_dataset[line[0]]['TSS'] = line[4]
                     train_dataset[line[0]]['TTT'] = line[5]
                     train_dataset[line[0]]['ID'] = gt_file[0][-10:-4]
+                    train_dataset[line[0]]['tracts'] = line[6]
     return train_dataset
 
 # Get the mRS for training subject from training_1 to training_48
@@ -150,6 +161,15 @@ def extract_gt_mRS():
     for idx, subject_name in enumerate(train_dataset.keys()):
         mRS_gt[idx] = train_dataset[subject_name]['mRS']
     return mRS_gt
+
+def extract_tract_features():
+	''' extract number of tracts'''
+	train_dataset = get_train_dataset()
+	tracts = np.zeros((37, 1))
+	for idx, subject_name in enumerate(train_dataset.keys()):
+		tracts[idx] = train_dataset[subject_name]['tracts']
+	return tracts, ['tracts']
+
 
 # Extract the volume of stroke in MNI152 space
 def extract_volumetric_features():
@@ -212,12 +232,12 @@ def extract_morphological_features():
         morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_surface, stroke_regions[0].solidity, stroke_roundness
     return morphological_features, morphological_list
 
-#def extract_tractographic_features(region_type='roi', number_tracts = 1000000):\
+
+
+
 def extract_tractographic_features(weight_type, aal_regions=116):
     # The ground truth lesion in subject space
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
-    # The connectivity matrices location 
-    #connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', region_type, 'gt_stroke', str(number_tracts))
     # New connectivity matrices location
     connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', 'gt_stroke')
     
@@ -232,7 +252,7 @@ def extract_tractographic_features(weight_type, aal_regions=116):
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     tractographic_list = ["tract_aal_"+str(i) for i in range(1, aal_regions+1)]
-    assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
+    assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 37)
     train_dataset = get_train_dataset()
     # Tractographic Features
     W_dsi_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
@@ -247,13 +267,13 @@ def extract_tractographic_features(weight_type, aal_regions=116):
         subject_id = train_dataset[subject_name]['ID']
         connectivity_pass_file = find_list(subject_id, connectivity_pass_files)
         connectivity_pass_obj = loadmat(connectivity_pass_file)
-        weighted_connectivity_pass = threshold_connectivity_matrix(connectivity_pass_obj['connectivity'], 0)
-        W_nrm_pass, W_bin_pass = weight_conversion(weighted_connectivity_pass)
+        thresholded_connectivity_pass = threshold_connectivity_matrix(connectivity_pass_obj['connectivity'], 0)
+        W_nrm_pass, W_bin_pass = weight_conversion(thresholded_connectivity_pass)
 
         connectivity_end_file = find_list(subject_id, connectivity_end_files)
         connectivity_end_obj = loadmat(connectivity_end_file)
-        weighted_connectivity_end = threshold_connectivity_matrix(connectivity_end_obj['connectivity'], 0)
-        W_nrm_end, W_bin_end = weight_conversion(weighted_connectivity_end)
+        thresholded_connectivity_end = threshold_connectivity_matrix(connectivity_end_obj['connectivity'], 0)
+        W_nrm_end, W_bin_end = weight_conversion(thresholded_connectivity_end)
 
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
 
@@ -270,11 +290,11 @@ def extract_tractographic_features(weight_type, aal_regions=116):
 
 
         # weighted connectivity histogram
-        W_dsi_pass_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_pass, axis=0), lesion_weights)
+        W_dsi_pass_histogram_features[idx, :] = np.multiply(np.sum(thresholded_connectivity_pass, axis=0), lesion_weights)
         W_nrm_pass_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_pass, axis=0), lesion_weights)
         W_bin_pass_histogram_features[idx, :] = np.multiply(np.sum(W_bin_pass, axis=0), lesion_weights)
 
-        W_dsi_end_histogram_features[idx, :] = np.multiply(np.sum(weighted_connectivity_end, axis=0), lesion_weights)
+        W_dsi_end_histogram_features[idx, :] = np.multiply(np.sum(thresholded_connectivity_end, axis=0), lesion_weights)
         W_nrm_end_histogram_features[idx, :] = np.multiply(np.sum(W_nrm_end, axis=0), lesion_weights)
         W_bin_end_histogram_features[idx, :] = np.multiply(np.sum(W_bin_end, axis=0), lesion_weights)
 
@@ -333,3 +353,62 @@ def extract_modified_volumetric_spatial_features(atlas_name):
     volumetric_spatial_list =['volume_'+atlas_name+'_'+str(i) for i in range(1, int(np.amax(atlas_nda))+1)]
     assert((len(volumetric_spatial_list))==modified_volumetric_spatial_features.shape[1])
     return modified_volumetric_spatial_features, volumetric_spatial_list
+
+
+def extract_new_tractographic_features(weight_type, aal_regions=116):
+    # The ground truth lesion in subject space
+    gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
+    # New connectivity matrices location
+    connectivity_train_dir = os.path.join(paths.dsi_studio_path, 'connectivity', 'gt_stroke')
+    
+    # pass type locations
+    connectivity_pass_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'pass' in name and name.endswith('.mat')]
+    connectivity_pass_files.sort()
+    # end type locations
+    connectivity_end_files = [os.path.join(root, name) for root, dirs, files in os.walk(connectivity_train_dir) for name in files if 'count' in name and 'ncount' not in name and 'connectivity' in name  and 'end' in name and name.endswith('.mat')]
+    connectivity_end_files.sort()
+    # The ground truth lesions in MNI space
+    stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
+    stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
+    stroke_mni_paths.sort()
+    tractographic_list = ["tract_aal_"+str(i) for i in range(1, aal_regions+1)]
+    assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 37)
+    train_dataset = get_train_dataset()
+    # Tractographic Features
+    W_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+
+    for idx, subject_name in enumerate(train_dataset.keys()):
+        HCP_pass, HCP_end = get_hcp_connectivity_matrice()
+        subject_id = train_dataset[subject_name]['ID']
+        connectivity_pass_file = find_list(subject_id, connectivity_pass_files)
+        connectivity_pass_obj = loadmat(connectivity_pass_file)
+        connectivity_pass_matrix = connectivity_pass_obj['connectivity']
+        normalized_pass_matrix = divide_hcp(connectivity_pass_matrix, HCP_pass)
+
+        connectivity_end_file = find_list(subject_id, connectivity_end_files)
+        connectivity_end_obj = loadmat(connectivity_end_file)
+        connectivity_end_matrix = connectivity_end_obj['connectivity']
+        normalized_end_matrix = divide_hcp(connectivity_pass_matrix, HCP_end)
+
+
+        stroke_mni_path = find_list(subject_id, stroke_mni_paths)
+
+        # =================================== Weight Vector ========================================== #
+        # Get the lesion weights
+        if 'ori' in weight_type:
+            lesion_weights = get_lesion_weights(stroke_mni_path)
+        # Get the modified lesion weights
+        if 'mod' in weight_type:
+            lesion_weights = get_modified_lesion_weights(stroke_mni_path)
+        # No weight
+        if 'one' in weight_type:
+            lesion_weights = np.ones((1,aal_regions), dtype=np.float32)
+
+
+        # weighted connectivity histogram
+        W_pass_histogram_features[idx, :] = np.multiply(np.sum(normalized_pass_matrix, axis=0), lesion_weights)
+
+        W_end_histogram_features[idx, :] = np.multiply(np.sum(normalized_end_matrix, axis=0), lesion_weights)
+
+    return W_pass_histogram_features, W_end_histogram_features, tractographic_list
