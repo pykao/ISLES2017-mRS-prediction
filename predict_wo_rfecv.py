@@ -35,9 +35,6 @@ console.setLevel(logging.INFO)
 console.setFormatter(logging.Formatter(fmt))
 logging.getLogger('').addHandler(console)
 
-# ======================================= Parameters Setting ================================== #
-use_original_feature = False
-rfecv_feature_selection = True
 
 # ======================================== Select Feature  ==================================== #
 
@@ -50,10 +47,10 @@ rfecv_feature_selection = True
 # lesion in brain parcellation regions 
 #feature_type = 'original_volumetric_spatial'
 # modified volumetric and spatial feature
-feature_type = 'modified_volumetric_spatial'
+#feature_type = 'modified_volumetric_spatial'
 #atlas_name = 'HarvardOxfordSub'
 #atlas_name = 'HarvardOxfordCort'
-atlas_name = 'aal'
+#atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
@@ -63,15 +60,15 @@ atlas_name = 'aal'
 #feature_type = 'num_fibers'
 
 #feature_type = 'new_fib_pass'
-#feature_type = 'new_fib_end'
+feature_type = 'new_fib_end'
 # original
 #weight_type = 'original'
 # modified
-#weight_type = 'modified'
+weight_type = 'modified'
 # one
 #weight_type = 'one'
 
-#aal_regions = 116
+aal_regions = 116
 
 
 
@@ -88,7 +85,7 @@ atlas_name = 'aal'
 # one
 #weight_type = 'one'
 
-aal_regions = 116
+#aal_regions = 116
 
 # =================================== Groundtruth of mRS scores ================================ #
 logging.info('Extracting mRS scores...')
@@ -120,6 +117,8 @@ if  'volume' in feature_type and 'spatial' in feature_type:
     if 'mod' in feature_type:
         logging.info('Using modified version of volumetric and spatial features...')
         features, features_list = extract_modified_volumetric_spatial_features(atlas_name)
+
+
 if 'tract' in feature_type:
     logging.info('Extracting tractographic features...')
     logging.info('Feature type: %s' %feature_type)
@@ -160,11 +159,9 @@ if 'new_fib' in feature_type:
 
 # =============================== Save Original Features ======================================= #
 
-
-print(features[0,:])
-logging.info('Saving Features...')
-if not os.path.exists('./features/'):
-	os.mkdir('./features/')
+#logging.info('Saving Features...')
+#if not os.path.exists('./features/'):
+#	os.mkdir('./features/')
 #np.save('./features/volumetric_features.npy', features)
 #np.save('./features/spatial_features.npy', features)
 #np.save('./features/morphological_features.npy', features)
@@ -178,36 +175,17 @@ logging.info('Normalizing features...')
 scaler = StandardScaler()
 normalized_features = scaler.fit_transform(features)
 
-# =========================== Remove features with low variance ================================= # 
+# =========================== Remove features with zero variance ================================= # 
 
-logging.info('Removing features with low variance...')
-sel = VarianceThreshold(0.85*(1-0.85))
+logging.info('Removing features with zero variance...')
+sel = VarianceThreshold()
 selected_normalized_features = sel.fit_transform(normalized_features)
 selected_features_list = [name for idx, name in enumerate(features_list) if sel.get_support()[idx]]
 
-# =========================== Select which feature to use =========================================== #
-
-
-if use_original_feature:
-    # ====================================== Original Features ====================================== #
-    logging.info('Using original features...')
-    X, X_list = normalized_features, features_list
-elif rfecv_feature_selection:
-    # ======================================= RFECV Features ======================================== #
-    logging.info('Using RFECV features...')
-    # Cross Validation Model
-    loo = LeaveOneOut()
-    estimator_rfecv = RandomForestRegressor(n_estimators=300, max_depth=3, random_state=1989, n_jobs=-1)
-    rfecv = RFECV(estimator_rfecv, step=1, cv=loo, scoring='neg_mean_absolute_error', n_jobs=-1)
-    rfecv_selected_normalized_features = rfecv.fit_transform(selected_normalized_features, mRS_gt)
-    rfecv_selected_features_list = [name for idx, name in enumerate(selected_features_list) if rfecv.get_support()[idx]]
-    X, X_list = rfecv_selected_normalized_features, rfecv_selected_features_list
-else:
-    # ======================================= Features with high variance =========================== #
-    logging.info('Using features with high variance...')
-    X, X_list = selected_normalized_features, selected_features_list
 
 # =============================================== Start Prediction ========================================= #
+
+X, X_list = selected_normalized_features, selected_features_list 
 
 logging.info('Predicting...')
 
@@ -266,7 +244,7 @@ feature_importances = sorted(feature_importances, key = lambda x: x[1], reverse 
 # Print out the feature and importances 
 [logging.info('Variable: {:30} Importance: {}'.format(*pair)) for pair in feature_importances]
 
-logging.info(feature_type+" features with RF Regressor - Accuracy: %0.2f , MAE: %0.2f (+/- %0.2f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
+logging.info(feature_type+" features with RF Regressor - Accuracy: %0.3f , MAE: %0.3f (+/- %0.3f)" %(np.mean(accuracy), np.mean(y_abs_error), np.std(y_abs_error)))
 
 #x_range = np.arange(volumetric_spatial_features.shape[1])
 #lesion_histogram = volumetric_spatial_features.sum(axis=0)

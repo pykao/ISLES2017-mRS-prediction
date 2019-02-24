@@ -9,17 +9,18 @@ from scipy.io import loadmat
 from skimage.measure import regionprops, marching_cubes_classic, mesh_surface_area
 
 def divide_hcp(connectivity_matrix, hcp_connectivity):
-	assert(connectivity_matrix.shape == hcp_connectivity.shape)
-	output_matrix = np.zeros(connectivity_matrix.shape)
-	for i in range(connectivity_matrix.shape[0]):
-		for j in range(connectivity_matrix.shape[1]):
-			if hcp_connectivity[i,j] != 0:
-				output_matrix[i,j] = connectivity_matrix[i,j]/hcp_connectivity[i,j]
-	return output_matrix
+    ''' divide the connectivity matrix by the hcp matrix'''
+    assert(connectivity_matrix.shape == hcp_connectivity.shape)
+    output_matrix = np.zeros(connectivity_matrix.shape)
+    for i in range(connectivity_matrix.shape[0]):
+        for j in range(connectivity_matrix.shape[1]):
+            if hcp_connectivity[i,j] != 0:
+                output_matrix[i,j] = connectivity_matrix[i,j]/hcp_connectivity[i,j]
+    return output_matrix
 
 
 def get_hcp_connectivity_matrice(hcp_connectivity_matrices_path = paths.hcp_connectivity_matrices_path):
-    
+    '''Get the pass-type and end-type connectivity matrices from HCP1021 subjects'''
     end_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.end.connectivity.mat')
     
     pass_matrix_path = os.path.join(hcp_connectivity_matrices_path, 'HCP1021.1mm.fib.gz.aal.count.pass.connectivity.mat')
@@ -92,8 +93,7 @@ def weight_conversion(W):
     return W_nrm, W_bin
 
 def get_lesion_weights(stroke_mni_path):
-    ''' get the weight vector'''
-    #print(stroke_mni_path)
+    ''' get the weight vector(workshop paper)'''
     aal_path = os.path.join(paths.dsi_studio_path, 'atlas', 'aal.nii.gz')
     aal_nda = ReadImage(aal_path)
     aal_182_218_182 = reshape_by_padding_upper_coords(aal_nda, (182,218,182), 0)
@@ -105,13 +105,12 @@ def get_lesion_weights(stroke_mni_path):
         bp_size = float(np.count_nonzero(mask))
         stroke_in_bp = np.multiply(mask, stroke_mni_nda)
         stroke_in_bp_size = float(np.count_nonzero(stroke_in_bp))
-        #weights[bp_number] = stroke_in_bp_size/bp_size
-        weights[bp_number] = stroke_in_bp_size
+        weights[bp_number] = stroke_in_bp_size/bp_size
+        #weights[bp_number] = stroke_in_bp_size
     return weights
 
 def get_modified_lesion_weights(stroke_mni_path):
     ''' get the modified weight vector'''
-    #print(stroke_mni_path)
     aal_path = os.path.join(paths.dsi_studio_path, 'atlas', 'aal.nii.gz')
     aal_nda = ReadImage(aal_path)
     aal_182_218_182 = reshape_by_padding_upper_coords(aal_nda, (182,218,182), 0)
@@ -126,9 +125,12 @@ def get_modified_lesion_weights(stroke_mni_path):
         stroke_volume_in_bp = float(np.count_nonzero(stroke_in_bp))
         #weights[bp_number] = 1.0 + stroke_volume_in_bp/stroke_volume
         weights[bp_number] = stroke_volume_in_bp/stroke_volume
+    #remaining_volume = stroke_volume - np.sum(weights)
+    #print(remaining_volume)
     return weights
 
 def get_train_dataset():    
+    '''Give you the training dataset'''
     gt_subject_paths = [os.path.join(root, name) for root, dirs, files in os.walk(paths.isles2017_training_dir) for name in files if '.OT.' in name and '__MACOSX' not in root and name.endswith('.nii')]
     gt_subject_paths.sort()
     # The CSV file for train dataset
@@ -155,7 +157,7 @@ def get_train_dataset():
 
 # Get the mRS for training subject from training_1 to training_48
 def extract_gt_mRS():
-    # Ground truth 
+    '''extract the mRS for training subjects from training_1 to training_48'''  
     mRS_gt = np.zeros((37, ))
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
@@ -178,7 +180,7 @@ def extract_volumetric_features():
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
-    assert(len(stroke_mni_paths) == 43)
+    assert(len(stroke_mni_paths) == 37)
     # Volumetric Features
     volumetric_features = np.zeros((37,1))
     train_dataset = get_train_dataset()
@@ -196,7 +198,7 @@ def extract_spatial_features():
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
-    assert(len(stroke_mni_paths) == 43)
+    assert(len(stroke_mni_paths) == 37)
     spatial_list = ["centroid_z", "centroid_y", "centroid_x"]
     # Volumetric Features
     spatial_features = np.zeros((37,3))
@@ -215,7 +217,7 @@ def extract_morphological_features():
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
-    assert(len(stroke_mni_paths) == 43)
+    assert(len(stroke_mni_paths) == 37)
     morphological_list = ["major", "minor", "major/minor", "surface", "solidity", "roundness"]
     # Volumetric Features
     morphological_features = np.zeros((37,6), dtype=np.float32)
@@ -231,9 +233,6 @@ def extract_morphological_features():
         stroke_roundness = find_3d_roundness(stroke_mni_nda.astype(int))
         morphological_features[idx, :] = stroke_major_axis_length, stroke_minor_axis_length, stroke_major_axis_length/stroke_minor_axis_length, stroke_surface, stroke_regions[0].solidity, stroke_roundness
     return morphological_features, morphological_list
-
-
-
 
 def extract_tractographic_features(weight_type, aal_regions=116):
     # The ground truth lesion in subject space
@@ -349,7 +348,7 @@ def extract_modified_volumetric_spatial_features(atlas_name):
             mask[atlas_nda==(bp_number)]=1
             stroke_in_bp = np.multiply(mask, stroke_mni_nda)
             stroke_in_bp_volume = float(np.count_nonzero(stroke_in_bp))
-            modified_volumetric_spatial_features[idx, bp_number-1] = stroke_in_bp_volume + whole_stroke_volume
+            modified_volumetric_spatial_features[idx, bp_number-1] = stroke_in_bp_volume / whole_stroke_volume
     volumetric_spatial_list =['volume_'+atlas_name+'_'+str(i) for i in range(1, int(np.amax(atlas_nda))+1)]
     assert((len(volumetric_spatial_list))==modified_volumetric_spatial_features.shape[1])
     return modified_volumetric_spatial_features, volumetric_spatial_list
@@ -384,12 +383,12 @@ def extract_new_tractographic_features(weight_type, aal_regions=116):
         connectivity_pass_file = find_list(subject_id, connectivity_pass_files)
         connectivity_pass_obj = loadmat(connectivity_pass_file)
         connectivity_pass_matrix = connectivity_pass_obj['connectivity']
-        normalized_pass_matrix = divide_hcp(connectivity_pass_matrix, HCP_pass)
+        #normalized_pass_matrix = divide_hcp(connectivity_pass_matrix, HCP_pass)
 
         connectivity_end_file = find_list(subject_id, connectivity_end_files)
         connectivity_end_obj = loadmat(connectivity_end_file)
         connectivity_end_matrix = connectivity_end_obj['connectivity']
-        normalized_end_matrix = divide_hcp(connectivity_pass_matrix, HCP_end)
+        #normalized_end_matrix = divide_hcp(connectivity_pass_matrix, HCP_end)
 
 
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
@@ -404,11 +403,13 @@ def extract_new_tractographic_features(weight_type, aal_regions=116):
         # No weight
         if 'one' in weight_type:
             lesion_weights = np.ones((1,aal_regions), dtype=np.float32)
-
+        
+        normalized_pass_matrix = np.divide(np.sum(connectivity_pass_matrix, axis=0), np.sum(HCP_pass, axis=0))
+        normalized_end_matrix = np.divide(np.sum(connectivity_end_matrix, axis=0), np.sum(HCP_end, axis=0))
 
         # weighted connectivity histogram
-        W_pass_histogram_features[idx, :] = np.multiply(np.sum(normalized_pass_matrix, axis=0), lesion_weights)
-
-        W_end_histogram_features[idx, :] = np.multiply(np.sum(normalized_end_matrix, axis=0), lesion_weights)
+        W_pass_histogram_features[idx, :] = np.multiply(normalized_pass_matrix, lesion_weights)
+        
+        W_end_histogram_features[idx, :] = np.multiply(normalized_end_matrix, lesion_weights)
 
     return W_pass_histogram_features, W_end_histogram_features, tractographic_list
