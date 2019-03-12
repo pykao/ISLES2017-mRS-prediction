@@ -41,7 +41,7 @@ rfecv_feature_selection = True
 
 # ======================================== Select Feature  ==================================== #
 
-#feature_type = 'volumetric'
+feature_type = 'volumetric'
 #feature_type = 'spatial'
 #feature_type = 'morphological'
 
@@ -50,10 +50,10 @@ rfecv_feature_selection = True
 # lesion in brain parcellation regions 
 #feature_type = 'original_volumetric_spatial'
 # modified volumetric and spatial feature
-feature_type = 'modified_volumetric_spatial'
+#feature_type = 'modified_volumetric_spatial'
 #atlas_name = 'HarvardOxfordSub'
 #atlas_name = 'HarvardOxfordCort'
-atlas_name = 'aal'
+#atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'

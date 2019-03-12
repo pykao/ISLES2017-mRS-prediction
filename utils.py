@@ -180,7 +180,7 @@ def extract_volumetric_features():
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
-    assert(len(stroke_mni_paths) == 37)
+    assert(len(stroke_mni_paths) == 43)
     # Volumetric Features
     volumetric_features = np.zeros((37,1))
     train_dataset = get_train_dataset()
@@ -198,7 +198,7 @@ def extract_spatial_features():
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
-    assert(len(stroke_mni_paths) == 37)
+    assert(len(stroke_mni_paths) == 43)
     spatial_list = ["centroid_z", "centroid_y", "centroid_x"]
     # Volumetric Features
     spatial_features = np.zeros((37,3))
@@ -217,7 +217,7 @@ def extract_morphological_features():
     stroke_mni_dir = os.path.join(paths.dsi_studio_path, 'gt_stroke')
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
-    assert(len(stroke_mni_paths) == 37)
+    assert(len(stroke_mni_paths) == 43)
     morphological_list = ["major", "minor", "major/minor", "surface", "solidity", "roundness"]
     # Volumetric Features
     morphological_features = np.zeros((37,6), dtype=np.float32)
@@ -251,7 +251,7 @@ def extract_tractographic_features(weight_type, aal_regions=116):
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     tractographic_list = ["tract_aal_"+str(i) for i in range(1, aal_regions+1)]
-    assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 37)
+    assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
     train_dataset = get_train_dataset()
     # Tractographic Features
     W_dsi_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
@@ -371,7 +371,7 @@ def extract_new_tractographic_features(weight_type, aal_regions=116):
     stroke_mni_paths = [os.path.join(root, name) for root, dirs, files in os.walk(stroke_mni_dir) for name in files if name.endswith('nii.gz')]
     stroke_mni_paths.sort()
     tractographic_list = ["tract_aal_"+str(i) for i in range(1, aal_regions+1)]
-    assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 37)
+    assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
     train_dataset = get_train_dataset()
     # Tractographic Features
     W_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
