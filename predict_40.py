@@ -19,10 +19,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_absolute_error, accuracy_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
-from utils import ReadImage, find_list, threshold_connectivity_matrix, weight_conversion, get_lesion_weights, get_train_dataset
-from utils import extract_gt_mRS, extract_volumetric_features, extract_tractographic_features, extract_spatial_features
-from utils import extract_volumetric_spatial_features, extract_morphological_features, extract_modified_volumetric_spatial_features
-from utils import extract_new_tractographic_features, extract_tract_features
+from utils_40 import ReadImage, find_list, threshold_connectivity_matrix, weight_conversion, get_lesion_weights, get_train_dataset
+from utils_40 import extract_gt_mRS, extract_volumetric_features, extract_tractographic_features, extract_spatial_features
+from utils_40 import extract_volumetric_spatial_features, extract_morphological_features, extract_modified_volumetric_spatial_features
+from utils_40 import extract_new_tractographic_features, extract_tract_features
 
 from xgboost import XGBRegressor
 
@@ -79,20 +79,21 @@ rfecv_feature_selection = True
 #feature_type = 'tract_nrm_pass'
 #feature_type = 'tract_bin_pass'
 #feature_type = 'tract_dsi_end'
-#feature_type = 'tract_nrm_end'
-feature_type = 'tract_bin_end'
+feature_type = 'tract_nrm_end'
+#feature_type = 'tract_bin_end'
 # original
-#weight_type = 'original'
+weight_type = 'original'
 # modified
 #weight_type = 'modified'
 # one
-weight_type = 'one'
+#weight_type = 'one'
 
 aal_regions = 116
 
 # =================================== Groundtruth of mRS scores ================================ #
 logging.info('Extracting mRS scores...')
 mRS_gt = extract_gt_mRS()
+
 
 # ======================================== Feature Extraction ================================= #
 
@@ -140,7 +141,7 @@ if 'tract' in feature_type:
 
 if 'oskar' in feature_type:
     logging.info('Extracting Oskar features...')
-    features = np.load('./features/oskar_features.npy')
+    features = np.load('./features/oskar_features_40.npy')
     features_list = list(range(1662))
 
 
@@ -216,12 +217,12 @@ y = mRS_gt
 # Cross Validation Model
 loo = LeaveOneOut()
 
-accuracy = np.zeros((37,1), dtype=np.float32)
-y_pred_label = np.zeros((37,1), dtype=np.float32)
-y_abs_error = np.zeros((37,1), dtype=np.float32)
-##y_pred_proba = np.zeros((37,5), dtype=np.float32)
+accuracy = np.zeros((40,1), dtype=np.float32)
+y_pred_label = np.zeros((40,1), dtype=np.float32)
+y_abs_error = np.zeros((40,1), dtype=np.float32)
+##y_pred_proba = np.zeros((40,5), dtype=np.float32)
 
-subject_feature_importances = np.zeros((37,len(X_list)), dtype=np.float32)
+subject_feature_importances = np.zeros((40,len(X_list)), dtype=np.float32)
 
 idx = 0
 for train_index, test_index in loo.split(X):
@@ -254,7 +255,7 @@ if not os.path.exists('./predicted_labels/'):
 #np.save('./predicted_labels/ori_aal_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/rfecv_ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
-#np.save('./predicted_labels/oskar_pred_loo.npy', y_pred_label)
+#np.save('./predicted_labels/oskar_40_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/mod_tract_bin_end_aal_pred_loo.npy', y_pred_label)
 
 # =========================== Feature Importance ================================ #

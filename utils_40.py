@@ -105,8 +105,8 @@ def get_lesion_weights(stroke_mni_path):
         bp_size = float(np.count_nonzero(mask))
         stroke_in_bp = np.multiply(mask, stroke_mni_nda)
         stroke_in_bp_size = float(np.count_nonzero(stroke_in_bp))
-        #weights[bp_number] = stroke_in_bp_size/bp_size
-        weights[bp_number] = stroke_in_bp_size
+        weights[bp_number] = stroke_in_bp_size/bp_size
+        #weights[bp_number] = stroke_in_bp_size
     return weights
 
 def get_modified_lesion_weights(stroke_mni_path):
@@ -142,7 +142,7 @@ def get_train_dataset():
     with open(train_mRS_path, 'rt') as csv_file:
         csv_reader = csv.reader(csv_file)
         for line in csv_reader:
-            if line[2] == '90': # 90 days 
+            if line[2] == '90' or line[2] == '88' or line[2] == '96' or line[2] == '97': # 90 days 
                 subject_name = line[0]
                 gt_file = [file for file in gt_subject_paths if '/'+subject_name+'/' in file]
                 if gt_file:
@@ -158,7 +158,7 @@ def get_train_dataset():
 # Get the mRS for training subject from training_1 to training_48
 def extract_gt_mRS():
     '''extract the mRS for training subjects from training_1 to training_48'''  
-    mRS_gt = np.zeros((37, ))
+    mRS_gt = np.zeros((40, ))
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
         mRS_gt[idx] = train_dataset[subject_name]['mRS']
@@ -167,7 +167,7 @@ def extract_gt_mRS():
 def extract_tract_features():
 	''' extract number of tracts'''
 	train_dataset = get_train_dataset()
-	tracts = np.zeros((37, 1))
+	tracts = np.zeros((40, 1))
 	for idx, subject_name in enumerate(train_dataset.keys()):
 		tracts[idx] = train_dataset[subject_name]['tracts']
 	return tracts, ['tracts']
@@ -182,7 +182,7 @@ def extract_volumetric_features():
     stroke_mni_paths.sort()
     assert(len(stroke_mni_paths) == 43)
     # Volumetric Features
-    volumetric_features = np.zeros((37,1))
+    volumetric_features = np.zeros((40,1))
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
@@ -201,7 +201,7 @@ def extract_spatial_features():
     assert(len(stroke_mni_paths) == 43)
     spatial_list = ["centroid_z", "centroid_y", "centroid_x"]
     # Volumetric Features
-    spatial_features = np.zeros((37,3))
+    spatial_features = np.zeros((40,3))
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
@@ -220,7 +220,7 @@ def extract_morphological_features():
     assert(len(stroke_mni_paths) == 43)
     morphological_list = ["major", "minor", "major/minor", "surface", "solidity", "roundness"]
     # Volumetric Features
-    morphological_features = np.zeros((37,6), dtype=np.float32)
+    morphological_features = np.zeros((40,6), dtype=np.float32)
     train_dataset = get_train_dataset()
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
@@ -254,13 +254,13 @@ def extract_tractographic_features(weight_type, aal_regions=116):
     assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
     train_dataset = get_train_dataset()
     # Tractographic Features
-    W_dsi_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
-    W_nrm_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
-    W_bin_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_dsi_pass_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
+    W_nrm_pass_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
+    W_bin_pass_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
 
-    W_dsi_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
-    W_nrm_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
-    W_bin_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_dsi_end_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
+    W_nrm_end_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
+    W_bin_end_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
 
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
@@ -310,7 +310,7 @@ def extract_volumetric_spatial_features(atlas_name):
     atlas_nda = ReadImage(atlas_path)
     if atlas_name == 'aal':
         atlas_nda = reshape_by_padding_upper_coords(atlas_nda, (182,218,182), 0)
-    volumetric_spatial_features = np.zeros((37, int(np.amax(atlas_nda))+1), dtype=float)
+    volumetric_spatial_features = np.zeros((40, int(np.amax(atlas_nda))+1), dtype=float)
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
@@ -337,7 +337,7 @@ def extract_modified_volumetric_spatial_features(atlas_name):
     atlas_nda = ReadImage(atlas_path)
     if atlas_name == 'aal':
         atlas_nda = reshape_by_padding_upper_coords(atlas_nda, (182,218,182), 0)
-    modified_volumetric_spatial_features = np.zeros((37, int(np.amax(atlas_nda))), dtype=float)
+    modified_volumetric_spatial_features = np.zeros((40, int(np.amax(atlas_nda))), dtype=float)
     for idx, subject_name in enumerate(train_dataset.keys()):
         subject_id = train_dataset[subject_name]['ID']
         stroke_mni_path = find_list(subject_id, stroke_mni_paths)
@@ -374,8 +374,8 @@ def extract_new_tractographic_features(weight_type, aal_regions=116):
     assert(len(connectivity_pass_files) == len(connectivity_end_files) == len(stroke_mni_paths) == 43)
     train_dataset = get_train_dataset()
     # Tractographic Features
-    W_pass_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
-    W_end_histogram_features = np.zeros((37, aal_regions), dtype=np.float32)
+    W_pass_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
+    W_end_histogram_features = np.zeros((40, aal_regions), dtype=np.float32)
 
     for idx, subject_name in enumerate(train_dataset.keys()):
         HCP_pass, HCP_end = get_hcp_connectivity_matrice()
