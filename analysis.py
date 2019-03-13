@@ -51,6 +51,24 @@ mRS = extract_gt_mRS()
 
 y = mRS.reshape((37,1))
 
+'''mRS_40 = np.load('./gt/ISLES2017_gt_40.npy')
+y = mRS_40.reshape((40, 1))
+
+rfecv_tract_pred = np.load('./predicted_labels/rfecv_ori_tract_nrm_end_aal_40_pred_loo.npy')
+rfecv_oskar_pred = np.load('./predicted_labels/rfecv_oskar_40_pred_loo.npy')
+rfecv_volume_pred = np.load('./predicted_labels/rfecv_volumetric_40_pred_loo.npy')
+rfecv_spatial_pred = np.load('./predicted_labels/rfecv_spatial_40_pred_loo.npy')
+rfecv_morpho_pred = np.load('./predicted_labels/rfecv_morphological_40_pred_loo.npy')
+rfecv_volspa_pred = np.load('./predicted_labels/rfecv_ori_aal_40_pred_loo.npy')
+
+ae_tract = np.absolute(y-rfecv_tract_pred)
+ae_oskar = np.absolute(y-rfecv_oskar_pred)
+ae_volume = np.absolute(y-rfecv_volume_pred)
+ae_spatial = np.absolute(y-rfecv_spatial_pred)
+ae_morpho = np.absolute(y-rfecv_morpho_pred)
+ae_volspa = np.absolute(y-rfecv_volspa_pred)
+print(stats.ttest_rel(ae_tract, ae_volspa))'''
+
 # Original Features
 ori_morphological_pred = np.load('./predicted_labels/morphological_pred_loo.npy')
 ori_aal_ori_pred = np.load('./predicted_labels/ori_aal_pred_loo.npy')

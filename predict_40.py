@@ -48,12 +48,12 @@ rfecv_feature_selection = True
 # lesion in brain parcellation regions and the remaining region
 #feature_type = 'volumetric_spatial'
 # lesion in brain parcellation regions 
-#feature_type = 'original_volumetric_spatial'
+feature_type = 'original_volumetric_spatial'
 # modified volumetric and spatial feature
 #feature_type = 'modified_volumetric_spatial'
 #atlas_name = 'HarvardOxfordSub'
 #atlas_name = 'HarvardOxfordCort'
-#atlas_name = 'aal'
+atlas_name = 'aal'
 #atlas_name = 'JHU-WhiteMatter-labels-1mm'
 #atlas_name = 'MNI'
 #atlas_name = 'OASIS_TRT_20'
@@ -79,16 +79,16 @@ rfecv_feature_selection = True
 #feature_type = 'tract_nrm_pass'
 #feature_type = 'tract_bin_pass'
 #feature_type = 'tract_dsi_end'
-feature_type = 'tract_nrm_end'
+#feature_type = 'tract_nrm_end'
 #feature_type = 'tract_bin_end'
 # original
-weight_type = 'original'
+#weight_type = 'original'
 # modified
 #weight_type = 'modified'
 # one
 #weight_type = 'one'
 
-aal_regions = 116
+#aal_regions = 116
 
 # =================================== Groundtruth of mRS scores ================================ #
 logging.info('Extracting mRS scores...')
@@ -247,14 +247,14 @@ logging.info('Saving Predicted Labels...')
 
 if not os.path.exists('./predicted_labels/'):
 	os.mkdir('./predicted_labels/')
-#np.save('./predicted_labels/rfecv_volumetric_pred_loo.npy', y_pred_label) 
-#np.save('./predicted_labels/rfecv_spatial_pred_loo.npy', y_pred_label)
-#np.save('./predicted_labels/rfecv_morphological_pred_loo.npy', y_pred_label)
+#np.save('./predicted_labels/rfecv_volumetric_40_pred_loo.npy', y_pred_label) 
+#np.save('./predicted_labels/rfecv_spatial_40_pred_loo.npy', y_pred_label)
+#np.save('./predicted_labels/rfecv_morphological_40_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/morphological_pred_loo.npy', y_pred_label)
-#np.save('./predicted_labels/rfecv_ori_aal_pred_loo.npy', y_pred_label)
+np.save('./predicted_labels/rfecv_ori_aal_40_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/ori_aal_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/rfecv_ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
-#np.save('./predicted_labels/ori_tract_nrm_end_aal_pred_loo.npy', y_pred_label)
+#np.save('./predicted_labels/ori_tract_nrm_end_aal_40_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/oskar_40_pred_loo.npy', y_pred_label)
 #np.save('./predicted_labels/mod_tract_bin_end_aal_pred_loo.npy', y_pred_label)
 
