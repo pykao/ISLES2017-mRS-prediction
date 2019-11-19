@@ -2,6 +2,16 @@
 
 This repository extracts the tractograpic feature, other first-order features and the state-of-the-art feature from the stroke lesion. A random forest regressor is used with one type of feature to predict the modified Rankin Scale of stroke patients. 
 
+## Citations
+
+[Predicting the overall survival of brain tumor patients using tractographic feature](https://link.springer.com/chapter/10.1007/978-3-030-11726-9_12)
+
+`Kao, Po-Yu, et al. "Brain tumor segmentation and tractographic feature extraction from structural mr images for overall survival prediction." International MICCAI Brainlesion Workshop. Springer, Cham, 2018.`
+
+[Predicting the clinical outcome of stroke patients using tractographic feature](https://arxiv.org/abs/1907.10419)
+
+`Kao, Po-Yu, et al. "Predicting Clinical Outcome of Stroke Patients with Tractographic Feature." International MICCAI Brainlesion Workshop. Springer, Cham, 2019.`
+
 ## Dataset
 
 [Ischemic Stroke Lesion Segmentation (ISLES) 2017](http://www.isles-challenge.org/ISLES2017/)
