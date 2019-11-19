@@ -66,9 +66,9 @@ end-type connectogram and pass-type connectogram
 
 end-type network measures and pass-type network measures
 
-## 4. predict_loo.py
+## 4. predict.py
 
-Perform mRS prediction on features extracted from the lesion region with-leave one-out cross-validation on the ISLES2017 training dataset
+Perform mRS prediction on features extracted from the lesion region with leave-one-out cross-validation on the ISLES2017 training dataset
 
 ## 5. extract_oskar_features.py (run in python 2.7)
 
